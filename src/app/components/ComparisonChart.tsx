@@ -1,15 +1,30 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { niceTicks, pickLabelIndices } from "@/lib/chart";
+import { formatDate, formatSignedPercent } from "@/lib/format";
+
 type Point = { date: string; fund: number; benchmark: number | null };
 
-/** Two-line growth-of-$1 chart: the fund vs a benchmark, both starting at 1. */
+const WIDTH = 720;
+const PAD_X = 12;
+const PAD_Y = 14;
+const AXIS_W = 48;
+const AXIS_H = 20;
+
+/** Interactive growth-of-$1 chart: the fund vs a benchmark, both starting at 0%. */
 export function ComparisonChart({
   series,
   benchmarkLabel,
-  height = 200,
+  height = 220,
 }: {
   series: Point[];
   benchmarkLabel: string;
   height?: number;
 }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [hover, setHover] = useState<number | null>(null);
+
   if (series.length < 2) {
     return (
       <div className="flex items-center justify-center text-sm text-zinc-400" style={{ height }}>
@@ -18,42 +33,65 @@ export function ComparisonChart({
     );
   }
 
-  const width = 720;
-  const padX = 6;
-  const padY = 14;
+  // Work in percent-return-from-anchor space so axis labels read naturally.
+  const pts = series.map((p) => ({
+    date: p.date,
+    fund: (p.fund - 1) * 100,
+    benchmark: p.benchmark != null ? (p.benchmark - 1) * 100 : null,
+  }));
 
-  const all: number[] = [];
-  for (const p of series) {
-    all.push(p.fund);
-    if (p.benchmark != null) all.push(p.benchmark);
-  }
-  const min = Math.min(...all);
-  const max = Math.max(...all);
-  const range = max - min || 1;
+  const plotW = WIDTH - AXIS_W - PAD_X;
+  const plotH = height - AXIS_H - PAD_Y;
+  const allVals = pts.flatMap((p) => (p.benchmark != null ? [p.fund, p.benchmark] : [p.fund]));
+  const min = Math.min(...allVals, 0);
+  const max = Math.max(...allVals, 0);
+  const ticks = niceTicks(min, max, 4);
+  const loBound = Math.min(min, ticks[0]);
+  const hiBound = Math.max(max, ticks[ticks.length - 1]);
+  const range = hiBound - loBound || 1;
 
-  const x = (i: number) => padX + (i / (series.length - 1)) * (width - padX * 2);
-  const y = (v: number) => padY + (1 - (v - min) / range) * (height - padY * 2);
+  const x = (i: number) => AXIS_W + (i / (pts.length - 1)) * plotW;
+  const y = (v: number) => PAD_Y + (1 - (v - loBound) / range) * plotH;
 
-  const fundLine = series.map((p, i) => `${x(i).toFixed(1)},${y(p.fund).toFixed(1)}`).join(" ");
+  const fundLine = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.fund).toFixed(1)}`).join(" ");
 
-  // Benchmark line may have gaps (missing days); split into contiguous runs.
   const benchRuns: string[] = [];
   let run: string[] = [];
-  series.forEach((p, i) => {
-    if (p.benchmark != null) {
-      run.push(`${x(i).toFixed(1)},${y(p.benchmark).toFixed(1)}`);
-    } else if (run.length) {
+  pts.forEach((p, i) => {
+    if (p.benchmark != null) run.push(`${x(i).toFixed(1)},${y(p.benchmark).toFixed(1)}`);
+    else if (run.length) {
       benchRuns.push(run.join(" "));
       run = [];
     }
   });
   if (run.length) benchRuns.push(run.join(" "));
 
-  // Baseline at $1 (starting value) for reference.
-  const baseY = y(1);
+  const labelIdx = pickLabelIndices(pts.length, 4);
+
+  function handleMove(clientX: number) {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const frac = (clientX - rect.left) / rect.width;
+    const targetX = frac * WIDTH;
+    let nearest = 0;
+    let best = Infinity;
+    for (let i = 0; i < pts.length; i++) {
+      const d = Math.abs(x(i) - targetX);
+      if (d < best) {
+        best = d;
+        nearest = i;
+      }
+    }
+    setHover(nearest);
+  }
+
+  const hp = hover != null ? pts[hover] : null;
+  const tooltipLeftPct = hover != null ? (x(hover) / WIDTH) * 100 : 0;
+  const tooltipAlignRight = tooltipLeftPct > 65;
 
   return (
-    <div>
+    <div className="relative">
       <div className="mb-2 flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-3 rounded-sm bg-emerald-500" /> Your fund
@@ -62,36 +100,87 @@ export function ComparisonChart({
           <span className="inline-block h-2 w-3 rounded-sm bg-zinc-400" /> {benchmarkLabel}
         </span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ height }} preserveAspectRatio="none">
-        {min < 1 && max > 1 && (
-          <line
-            x1={padX}
-            x2={width - padX}
-            y1={baseY}
-            y2={baseY}
-            className="stroke-zinc-200 dark:stroke-zinc-800"
-            strokeWidth={1}
-            strokeDasharray="4 4"
-          />
-        )}
-        {benchRuns.map((pts, i) => (
-          <polyline
-            key={i}
-            points={pts}
-            fill="none"
-            className="stroke-zinc-400"
-            strokeWidth={2}
-            vectorEffect="non-scaling-stroke"
-          />
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${WIDTH} ${height}`}
+        className="w-full cursor-crosshair"
+        style={{ height }}
+        preserveAspectRatio="none"
+        onMouseMove={(e) => handleMove(e.clientX)}
+        onMouseLeave={() => setHover(null)}
+        onTouchMove={(e) => e.touches[0] && handleMove(e.touches[0].clientX)}
+        onTouchEnd={() => setHover(null)}
+      >
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line
+              x1={AXIS_W}
+              x2={WIDTH - PAD_X}
+              y1={y(t)}
+              y2={y(t)}
+              className={t === 0 ? "stroke-zinc-300 dark:stroke-zinc-700" : "stroke-zinc-200 dark:stroke-zinc-800"}
+              strokeWidth={1}
+              strokeDasharray={t === 0 ? "4 4" : undefined}
+            />
+            <text x={AXIS_W - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-zinc-400 text-[10px]">
+              {t > 0 ? "+" : ""}
+              {t.toFixed(0)}%
+            </text>
+          </g>
         ))}
-        <polyline
-          points={fundLine}
-          fill="none"
-          className="stroke-emerald-500"
-          strokeWidth={2.5}
-          vectorEffect="non-scaling-stroke"
-        />
+
+        {labelIdx.map((i) => (
+          <text
+            key={i}
+            x={x(i)}
+            y={height - 4}
+            textAnchor={i === 0 ? "start" : i === pts.length - 1 ? "end" : "middle"}
+            className="fill-zinc-400 text-[10px]"
+          >
+            {formatDate(pts[i].date)}
+          </text>
+        ))}
+
+        {benchRuns.map((p, i) => (
+          <polyline key={i} points={p} fill="none" className="stroke-zinc-400" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        ))}
+        <polyline points={fundLine} fill="none" className="stroke-emerald-500" strokeWidth={2.5} vectorEffect="non-scaling-stroke" />
+
+        {hp && hover != null && (
+          <g>
+            <line
+              x1={x(hover)}
+              x2={x(hover)}
+              y1={PAD_Y}
+              y2={PAD_Y + plotH}
+              className="stroke-zinc-400 dark:stroke-zinc-600"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+            />
+            <circle cx={x(hover)} cy={y(hp.fund)} r={4} className="fill-emerald-500" />
+            {hp.benchmark != null && <circle cx={x(hover)} cy={y(hp.benchmark)} r={4} className="fill-zinc-400" />}
+          </g>
+        )}
       </svg>
+
+      {hp && (
+        <div
+          className="pointer-events-none absolute top-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+          style={
+            tooltipAlignRight
+              ? { right: `${100 - tooltipLeftPct}%`, marginRight: 8 }
+              : { left: `${tooltipLeftPct}%`, marginLeft: 8 }
+          }
+        >
+          <div className="text-zinc-400">{formatDate(hp.date)}</div>
+          <div className="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
+            Fund {formatSignedPercent(hp.fund / 100)}
+          </div>
+          {hp.benchmark != null && (
+            <div className="tabular-nums text-zinc-500">{benchmarkLabel} {formatSignedPercent(hp.benchmark / 100)}</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
