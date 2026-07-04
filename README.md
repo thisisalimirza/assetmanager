@@ -81,6 +81,11 @@ use `npm run reconcile` — it wipes clients/transactions/valuations and re-seed
 then prints the resulting per-client split so you can confirm it ties out. Point
 it at production by exporting `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` first.
 
+If you don't have a local shell handy (e.g. you're on mobile), `npm run gen-sql`
+prints a plain SQL script that does the same rebuild — paste it into Turso's
+web dashboard SQL console (app.turso.tech → your database → SQL/Studio tab)
+instead of running the npm script locally.
+
 ## Migrating from the original spreadsheet-era schema
 
 If the database still has the original v1 tables (`contributors` /

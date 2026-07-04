@@ -9,6 +9,7 @@
     "lint": "eslint",
     "seed": "tsx src/scripts/seed.ts",
     "reconcile": "tsx src/scripts/reconcile.ts",
+    "gen-sql": "tsx src/scripts/gen-sql.ts",
     "verify": "tsx src/scripts/verify-accounting.ts"
   },
   "dependencies": {
