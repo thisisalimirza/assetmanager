@@ -1,7 +1,7 @@
 /**
  * Canonical dataset for the fund, in the v2 model (clients / transactions /
  * valuations), reconciled against the Robinhood account as of 2026-07-04
- * (total value $12,311.98, all-time gain +$4,414.71 → ~$7,897.27 deposited).
+ * (total value $12,411.98, after Mom's $300 landed in the account that day).
  *
  * Pricing:
  * - Pre-spreadsheet deposits (through 2025-10-19) are priced flat (NAV 100) via
@@ -45,13 +45,19 @@ const TRANSACTIONS: Tx[] = [
   { client: "Ali", date: "2025-12-20", amount: 302.59, avb: 9496.6, note: RECON },
   { client: "Mom", date: "2026-03-04", amount: 250.0, avb: 8413.39 },
   { client: "Ali", date: "2026-03-05", amount: 302.59, avb: 8663.39, note: RECON },
-  { client: "Mom", date: "2026-06-27", amount: 300.0, avb: 11950.09 },
-  { client: "Ali", date: "2026-06-28", amount: 302.6, avb: 12250.09, note: RECON },
+  // Ali's recon deposit here no longer assumes Mom's $300 was already in the
+  // pot (see note below) — avb is just the real 6/27 mark.
+  { client: "Ali", date: "2026-06-28", amount: 302.6, avb: 11950.09, note: RECON },
+  // Mom sent this $300 on 6/27, but it sat as cash outside Robinhood until Ali
+  // actually deposited it into the account on 7/4 — priced at the real 7/4
+  // pre-money value, not the 6/27 mark it was originally (incorrectly) dated to.
+  { client: "Mom", date: "2026-07-04", amount: 300.0, avb: 12111.98, note: "Received from Mom 6/27; deposited to Robinhood 7/4" },
 ];
 
 const VALUATIONS: { date: string; value: number; note?: string }[] = [
   { date: "2025-10-31", value: 6844.67, note: "Estimated from original spreadsheet" },
-  { date: "2026-07-04", value: 12311.98, note: "Robinhood account value" },
+  { date: "2026-06-27", value: 11950.09, note: "Robinhood account value" },
+  { date: "2026-07-04", value: 12411.98, note: "Robinhood account value" },
 ];
 
 /** Inserts the full dataset. Assumes clients/transactions/valuations are empty. */
