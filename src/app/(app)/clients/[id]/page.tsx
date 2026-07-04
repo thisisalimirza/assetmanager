@@ -6,6 +6,7 @@ import {
   listClients,
   listTransactionsForClient,
 } from "@/lib/portfolio";
+import { getClientAlpha } from "@/lib/analytics";
 import {
   formatCurrency,
   formatSignedCurrency,
@@ -16,6 +17,7 @@ import {
 import { StatCard } from "@/app/components/StatCard";
 import { ClientModal } from "@/app/components/ClientModal";
 import { TransactionModal } from "@/app/components/TransactionModal";
+import { ComparisonChart } from "@/app/components/ComparisonChart";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +26,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const id = Number(idStr);
   if (Number.isNaN(id)) notFound();
 
-  const [fund, client, clients, txns] = await Promise.all([
+  const [fund, client, clients, txns, alpha] = await Promise.all([
     getFundSummary(),
     getClient(id),
     listClients(),
     listTransactionsForClient(id),
+    getClientAlpha(id),
   ]);
   if (!client) notFound();
 
@@ -80,6 +83,74 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           value={formatSignedPercent(s.returnPct)}
           tone={s.returnPct >= 0 ? "positive" : "negative"}
         />
+      </div>
+
+      <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-medium text-zinc-500">{client.name}&apos;s performance vs {alpha.label}</h2>
+          {alpha.available && (
+            <span className="text-xs text-zinc-400">since {formatDate(alpha.anchorDate)}</span>
+          )}
+        </div>
+        {alpha.available ? (
+          <>
+            <div className="mb-4 grid grid-cols-3 gap-4">
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">With this fund</div>
+                <div className="mt-0.5 text-xl font-semibold tabular-nums">{formatCurrency(alpha.actualValue)}</div>
+                <div
+                  className={
+                    "text-xs tabular-nums " +
+                    (alpha.actualReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")
+                  }
+                >
+                  {formatSignedPercent(alpha.actualReturn)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">If in {alpha.label} instead</div>
+                <div className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-500">
+                  {formatCurrency(alpha.hypotheticalValue)}
+                </div>
+                <div className="text-xs tabular-nums text-zinc-400">{formatSignedPercent(alpha.benchmarkReturn)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Difference</div>
+                <div
+                  className={
+                    "mt-0.5 text-xl font-semibold tabular-nums " +
+                    (alpha.alphaDollars >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")
+                  }
+                >
+                  {formatSignedCurrency(alpha.alphaDollars)}
+                </div>
+                <div
+                  className={
+                    "text-xs tabular-nums " +
+                    (alpha.alpha >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")
+                  }
+                >
+                  {formatSignedPercent(alpha.alpha)}
+                </div>
+              </div>
+            </div>
+            <ComparisonChart
+              series={alpha.series}
+              benchmarkLabel={alpha.label}
+              primaryLabel="With this fund"
+              mode="currency"
+            />
+            <p className="mt-2 text-xs text-zinc-400">
+              Compares what {client.name}&apos;s actual deposits/withdrawals earned in this fund vs.
+              what those same dollars, on those same dates, would have earned simply buying the{" "}
+              {alpha.label}.
+            </p>
+          </>
+        ) : (
+          <div className="flex h-24 items-center justify-center text-center text-sm text-zinc-400">
+            {alpha.reason}
+          </div>
+        )}
       </div>
 
       <div>

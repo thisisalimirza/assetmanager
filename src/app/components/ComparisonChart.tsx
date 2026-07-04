@@ -2,28 +2,38 @@
 
 import { useRef, useState } from "react";
 import { niceTicks, pickLabelIndices } from "@/lib/chart";
-import { formatDate, formatSignedPercent } from "@/lib/format";
+import { formatDate, formatSignedPercent, formatCurrency } from "@/lib/format";
 
 type Point = { date: string; fund: number; benchmark: number | null };
 
 const WIDTH = 720;
 const PAD_X = 12;
 const PAD_Y = 14;
-const AXIS_W = 48;
 const AXIS_H = 20;
 
-/** Interactive growth-of-$1 chart: the fund vs a benchmark, both starting at 0%. */
+/**
+ * Interactive two-line comparison chart, in one of two modes:
+ * - "percent" (default): series values are growth-of-$1 ratios (1 = start);
+ *   rendered as % return from the anchor. Used for the fund vs benchmark.
+ * - "currency": series values are raw dollar amounts, rendered as-is. Used
+ *   for a client's real value vs a hypothetical same-cashflow benchmark value.
+ */
 export function ComparisonChart({
   series,
   benchmarkLabel,
+  primaryLabel = "Your fund",
+  mode = "percent",
   height = 220,
 }: {
   series: Point[];
   benchmarkLabel: string;
+  primaryLabel?: string;
+  mode?: "percent" | "currency";
   height?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [hover, setHover] = useState<number | null>(null);
+  const axisW = mode === "currency" ? 64 : 48;
 
   if (series.length < 2) {
     return (
@@ -33,24 +43,30 @@ export function ComparisonChart({
     );
   }
 
-  // Work in percent-return-from-anchor space so axis labels read naturally.
-  const pts = series.map((p) => ({
-    date: p.date,
-    fund: (p.fund - 1) * 100,
-    benchmark: p.benchmark != null ? (p.benchmark - 1) * 100 : null,
-  }));
+  const pts =
+    mode === "percent"
+      ? series.map((p) => ({
+          date: p.date,
+          fund: (p.fund - 1) * 100,
+          benchmark: p.benchmark != null ? (p.benchmark - 1) * 100 : null,
+        }))
+      : series;
 
-  const plotW = WIDTH - AXIS_W - PAD_X;
+  const formatAxis = (v: number) => (mode === "currency" ? formatCurrency(v) : `${v > 0 ? "+" : ""}${v.toFixed(0)}%`);
+  const formatTooltip = (v: number) => (mode === "currency" ? formatCurrency(v) : formatSignedPercent(v / 100));
+
+  const plotW = WIDTH - axisW - PAD_X;
   const plotH = height - AXIS_H - PAD_Y;
   const allVals = pts.flatMap((p) => (p.benchmark != null ? [p.fund, p.benchmark] : [p.fund]));
-  const min = Math.min(...allVals, 0);
-  const max = Math.max(...allVals, 0);
+  const zeroBaseline = mode === "percent" ? 0 : allVals[0];
+  const min = Math.min(...allVals, zeroBaseline);
+  const max = Math.max(...allVals, zeroBaseline);
   const ticks = niceTicks(min, max, 4);
   const loBound = Math.min(min, ticks[0]);
   const hiBound = Math.max(max, ticks[ticks.length - 1]);
   const range = hiBound - loBound || 1;
 
-  const x = (i: number) => AXIS_W + (i / (pts.length - 1)) * plotW;
+  const x = (i: number) => axisW + (i / (pts.length - 1)) * plotW;
   const y = (v: number) => PAD_Y + (1 - (v - loBound) / range) * plotH;
 
   const fundLine = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.fund).toFixed(1)}`).join(" ");
@@ -94,7 +110,7 @@ export function ComparisonChart({
     <div className="relative">
       <div className="mb-2 flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-3 rounded-sm bg-emerald-500" /> Your fund
+          <span className="inline-block h-2 w-3 rounded-sm bg-emerald-500" /> {primaryLabel}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-3 rounded-sm bg-zinc-400" /> {benchmarkLabel}
@@ -114,17 +130,20 @@ export function ComparisonChart({
         {ticks.map((t, i) => (
           <g key={i}>
             <line
-              x1={AXIS_W}
+              x1={axisW}
               x2={WIDTH - PAD_X}
               y1={y(t)}
               y2={y(t)}
-              className={t === 0 ? "stroke-zinc-300 dark:stroke-zinc-700" : "stroke-zinc-200 dark:stroke-zinc-800"}
+              className={
+                mode === "percent" && t === 0
+                  ? "stroke-zinc-300 dark:stroke-zinc-700"
+                  : "stroke-zinc-200 dark:stroke-zinc-800"
+              }
               strokeWidth={1}
-              strokeDasharray={t === 0 ? "4 4" : undefined}
+              strokeDasharray={mode === "percent" && t === 0 ? "4 4" : undefined}
             />
-            <text x={AXIS_W - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-zinc-400 text-[10px]">
-              {t > 0 ? "+" : ""}
-              {t.toFixed(0)}%
+            <text x={axisW - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-zinc-400 text-[10px]">
+              {formatAxis(t)}
             </text>
           </g>
         ))}
@@ -174,10 +193,12 @@ export function ComparisonChart({
         >
           <div className="text-zinc-400">{formatDate(hp.date)}</div>
           <div className="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
-            Fund {formatSignedPercent(hp.fund / 100)}
+            {primaryLabel} {formatTooltip(hp.fund)}
           </div>
           {hp.benchmark != null && (
-            <div className="tabular-nums text-zinc-500">{benchmarkLabel} {formatSignedPercent(hp.benchmark / 100)}</div>
+            <div className="tabular-nums text-zinc-500">
+              {benchmarkLabel} {formatTooltip(hp.benchmark)}
+            </div>
           )}
         </div>
       )}

@@ -529,3 +529,37 @@ export async function getClientPeriodStatement(
     transactions: inPeriod,
   };
 }
+
+/**
+ * A single client's actual account value at every point in the fund's NAV
+ * history (their unit count only changes at their own transactions, but the
+ * dollar value moves with every fund-wide valuation in between). Used to
+ * chart a client's real performance against a hypothetical benchmark
+ * investment on the same timeline.
+ */
+export async function getClientValueSeries(clientId: number): Promise<{ date: string; value: number }[]> {
+  const [transactions, valuations] = await Promise.all([listTransactions(), listValuations()]);
+  const ledger = buildLedger(transactions, valuations);
+  const sorted = [...transactions].sort(compareTx);
+
+  let totalUnits = 0;
+  let lastNav = SEED_NAV;
+  let mine = 0;
+  let txIdx = 0;
+
+  return ledger.navSeries.map((p) => {
+    while (txIdx < sorted.length && sorted[txIdx].date <= p.date) {
+      const tx = sorted[txIdx];
+      let nav: number;
+      if (totalUnits <= 0) nav = SEED_NAV;
+      else if (tx.accountValueBefore != null && tx.accountValueBefore > 0) nav = tx.accountValueBefore / totalUnits;
+      else nav = lastNav;
+      const d = tx.amount / nav;
+      if (tx.clientId === clientId) mine += d;
+      totalUnits += d;
+      lastNav = nav;
+      txIdx++;
+    }
+    return { date: p.date, value: mine * p.navPerUnit };
+  });
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClientStatementData, getClientPeriodStatement } from "@/lib/portfolio";
+import { getClientAlpha } from "@/lib/analytics";
 import {
   formatCurrency,
   formatSignedCurrency,
@@ -118,7 +119,7 @@ function StatementHeader({ name, subtitle, right }: { name: string; subtitle: st
 }
 
 async function AllTimeStatementCard({ id, generatedOn }: { id: number; generatedOn: string }) {
-  const data = await getClientStatementData(id);
+  const [data, alpha] = await Promise.all([getClientStatementData(id), getClientAlpha(id)]);
   if (!data) notFound();
   const { client, summary, transactions, totalDeposits, totalWithdrawals, asOf } = data;
   const chronological = [...transactions].reverse();
@@ -153,6 +154,25 @@ async function AllTimeStatementCard({ id, generatedOn }: { id: number; generated
         Ownership of fund: {formatPercent(summary.ownership)} · Total deposits {formatCurrency(totalDeposits)} ·
         Total withdrawals {formatCurrency(totalWithdrawals)}
       </div>
+
+      {alpha.available && (
+        <div className="mt-6 rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/50">
+          <div className="mb-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            vs. {alpha.label} (since {formatDate(alpha.anchorDate)})
+          </div>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <span>
+              With this fund: <strong className="tabular-nums">{formatCurrency(alpha.actualValue)}</strong>
+            </span>
+            <span className="text-zinc-500">
+              If in {alpha.label} instead: <strong className="tabular-nums">{formatCurrency(alpha.hypotheticalValue)}</strong>
+            </span>
+            <span className={alpha.alphaDollars >= 0 ? "text-emerald-600" : "text-red-600"}>
+              Difference: <strong className="tabular-nums">{formatSignedCurrency(alpha.alphaDollars)}</strong>
+            </span>
+          </div>
+        </div>
+      )}
 
       <TxTable rows={chronological} />
       <Disclaimer />

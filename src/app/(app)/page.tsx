@@ -82,13 +82,18 @@ export default async function DashboardPage() {
           hint={`on ${formatCurrency(fund.totalCostBasis)} invested`}
         />
         <StatCard
-          label="Total return"
-          value={formatSignedPercent(fund.simpleReturn)}
-          tone={fund.simpleReturn >= 0 ? "positive" : "negative"}
-          hint={`${formatSignedPercent(fund.twr)} time-weighted`}
+          label="Fund performance"
+          value={formatSignedPercent(fund.twr)}
+          tone={fund.twr >= 0 ? "positive" : "negative"}
+          hint={`${formatSignedPercent(fund.simpleReturn)} money-weighted`}
         />
         <StatCard label="NAV per unit" value={formatCurrency(fund.navPerUnit)} hint={`${fund.totalUnits.toFixed(2)} units`} />
       </div>
+      <p className="-mt-4 text-xs text-zinc-400">
+        Fund performance is time-weighted (pure investment return, unaffected by deposit timing —
+        this is what&apos;s compared to the S&amp;P below). Money-weighted return is how much your
+        actual dollars grew, which can look better or worse depending on when money came in.
+      </p>
 
       <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="mb-3 text-sm font-medium text-zinc-500">Fund value over time</h2>
@@ -106,7 +111,7 @@ export default async function DashboardPage() {
           <>
             <div className="mb-4 grid grid-cols-3 gap-4">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Your fund</div>
+                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Fund performance</div>
                 <div
                   className={
                     "mt-0.5 text-xl font-semibold tabular-nums " +
