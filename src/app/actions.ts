@@ -43,6 +43,27 @@ function revalidateAll(clientId?: number) {
   if (clientId != null) revalidatePath(`/clients/${clientId}`);
 }
 
+// State returned to forms via useActionState so errors render inline instead of
+// throwing to the error page.
+export type FormState = { ok?: boolean; error?: string };
+
+function friendlyError(e: unknown): string {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/unique/i.test(msg)) return "That name is already in use — pick a different one.";
+  if (/Missing required field/i.test(msg)) return "Please fill in all required fields.";
+  if (/Invalid number/i.test(msg)) return "Please enter a valid number.";
+  return "Couldn't save — double-check the values and try again.";
+}
+
+async function run(fn: () => Promise<void>): Promise<FormState> {
+  try {
+    await fn();
+    return { ok: true };
+  } catch (e) {
+    return { error: friendlyError(e) };
+  }
+}
+
 // --- auth ---
 
 export async function login(formData: FormData) {
@@ -70,25 +91,29 @@ export async function logout() {
 
 // --- clients ---
 
-export async function createClient(formData: FormData) {
-  await portfolio.addClient({
-    name: requireString(formData, "name"),
-    email: optionalString(formData, "email"),
-    phone: optionalString(formData, "phone"),
-    notes: optionalString(formData, "notes"),
+export async function createClient(_prev: FormState, formData: FormData): Promise<FormState> {
+  return run(async () => {
+    await portfolio.addClient({
+      name: requireString(formData, "name"),
+      email: optionalString(formData, "email"),
+      phone: optionalString(formData, "phone"),
+      notes: optionalString(formData, "notes"),
+    });
+    revalidateAll();
   });
-  revalidateAll();
 }
 
-export async function editClient(formData: FormData) {
-  const id = requireNumber(formData, "id");
-  await portfolio.updateClient(id, {
-    name: requireString(formData, "name"),
-    email: optionalString(formData, "email"),
-    phone: optionalString(formData, "phone"),
-    notes: optionalString(formData, "notes"),
+export async function editClient(_prev: FormState, formData: FormData): Promise<FormState> {
+  return run(async () => {
+    const id = requireNumber(formData, "id");
+    await portfolio.updateClient(id, {
+      name: requireString(formData, "name"),
+      email: optionalString(formData, "email"),
+      phone: optionalString(formData, "phone"),
+      notes: optionalString(formData, "notes"),
+    });
+    revalidateAll(id);
   });
-  revalidateAll(id);
 }
 
 export async function removeClient(formData: FormData) {
@@ -106,29 +131,33 @@ function signedAmount(formData: FormData): number {
   return direction === "withdrawal" ? -raw : raw;
 }
 
-export async function createTransaction(formData: FormData) {
-  const clientId = requireNumber(formData, "clientId");
-  await portfolio.addTransaction({
-    clientId,
-    date: requireString(formData, "date"),
-    amount: signedAmount(formData),
-    accountValueBefore: optionalNumber(formData, "accountValueBefore"),
-    note: optionalString(formData, "note"),
+export async function createTransaction(_prev: FormState, formData: FormData): Promise<FormState> {
+  return run(async () => {
+    const clientId = requireNumber(formData, "clientId");
+    await portfolio.addTransaction({
+      clientId,
+      date: requireString(formData, "date"),
+      amount: signedAmount(formData),
+      accountValueBefore: optionalNumber(formData, "accountValueBefore"),
+      note: optionalString(formData, "note"),
+    });
+    revalidateAll(clientId);
   });
-  revalidateAll(clientId);
 }
 
-export async function editTransaction(formData: FormData) {
-  const id = requireNumber(formData, "id");
-  const clientId = requireNumber(formData, "clientId");
-  await portfolio.updateTransaction(id, {
-    clientId,
-    date: requireString(formData, "date"),
-    amount: signedAmount(formData),
-    accountValueBefore: optionalNumber(formData, "accountValueBefore"),
-    note: optionalString(formData, "note"),
+export async function editTransaction(_prev: FormState, formData: FormData): Promise<FormState> {
+  return run(async () => {
+    const id = requireNumber(formData, "id");
+    const clientId = requireNumber(formData, "clientId");
+    await portfolio.updateTransaction(id, {
+      clientId,
+      date: requireString(formData, "date"),
+      amount: signedAmount(formData),
+      accountValueBefore: optionalNumber(formData, "accountValueBefore"),
+      note: optionalString(formData, "note"),
+    });
+    revalidateAll(clientId);
   });
-  revalidateAll(clientId);
 }
 
 export async function removeTransaction(formData: FormData) {
@@ -138,22 +167,26 @@ export async function removeTransaction(formData: FormData) {
 
 // --- valuations ---
 
-export async function createValuation(formData: FormData) {
-  await portfolio.addValuation(
-    requireString(formData, "date"),
-    requireNumber(formData, "totalValue"),
-    optionalString(formData, "note")
-  );
-  revalidateAll();
+export async function createValuation(_prev: FormState, formData: FormData): Promise<FormState> {
+  return run(async () => {
+    await portfolio.addValuation(
+      requireString(formData, "date"),
+      requireNumber(formData, "totalValue"),
+      optionalString(formData, "note")
+    );
+    revalidateAll();
+  });
 }
 
-export async function editValuation(formData: FormData) {
-  await portfolio.updateValuation(requireNumber(formData, "id"), {
-    date: requireString(formData, "date"),
-    totalValue: requireNumber(formData, "totalValue"),
-    note: optionalString(formData, "note"),
+export async function editValuation(_prev: FormState, formData: FormData): Promise<FormState> {
+  return run(async () => {
+    await portfolio.updateValuation(requireNumber(formData, "id"), {
+      date: requireString(formData, "date"),
+      totalValue: requireNumber(formData, "totalValue"),
+      note: optionalString(formData, "note"),
+    });
+    revalidateAll();
   });
-  revalidateAll();
 }
 
 export async function removeValuation(formData: FormData) {

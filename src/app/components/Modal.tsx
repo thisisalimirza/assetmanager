@@ -53,16 +53,7 @@ export function Modal({ label, title, children, variant = "primary", className }
   );
 }
 
-/** Submit button that closes the enclosing Modal after dispatching the form. */
-export function ModalSubmit({ children }: { children: ReactNode }) {
-  const close = useContext(ModalContext);
-  return (
-    <button
-      type="submit"
-      onClick={() => setTimeout(close, 0)}
-      className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
-    >
-      {children}
-    </button>
-  );
+/** Access the enclosing Modal's close function (no-op outside a Modal). */
+export function useModalClose(): () => void {
+  return useContext(ModalContext);
 }

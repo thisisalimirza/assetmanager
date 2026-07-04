@@ -1,6 +1,7 @@
 import { createClient, editClient, removeClient } from "@/app/actions";
 import type { Client } from "@/lib/portfolio";
-import { Modal, ModalSubmit } from "./Modal";
+import { Modal } from "./Modal";
+import { ModalForm } from "./ModalForm";
 import { ConfirmSubmitButton } from "./ConfirmSubmitButton";
 
 const inputClass =
@@ -22,7 +23,7 @@ export function ClientModal({
 
   return (
     <Modal label={label} title={isEdit ? "Edit client" : "Add client"} variant={variant} className={className}>
-      <form action={isEdit ? editClient : createClient} className="flex flex-col gap-3">
+      <ModalForm action={isEdit ? editClient : createClient} submitLabel={isEdit ? "Save changes" : "Add client"}>
         {isEdit && <input type="hidden" name="id" value={client!.id} />}
         <div>
           <label className={labelClass}>Name</label>
@@ -42,8 +43,7 @@ export function ClientModal({
           <label className={labelClass}>Notes (optional)</label>
           <textarea name="notes" defaultValue={client?.notes ?? ""} rows={2} className={inputClass} />
         </div>
-        <ModalSubmit>{isEdit ? "Save changes" : "Add client"}</ModalSubmit>
-      </form>
+      </ModalForm>
 
       {isEdit && (
         <form className="mt-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">
