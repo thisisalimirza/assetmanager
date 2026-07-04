@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx src/scripts/seed.ts",
+    "reconcile": "tsx src/scripts/reconcile.ts",
     "verify": "tsx src/scripts/verify-accounting.ts"
   },
   "dependencies": {

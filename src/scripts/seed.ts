@@ -1,77 +1,104 @@
 /**
- * Seeds a fresh database with the historical data from the original Robinhood
- * spreadsheet, in the v2 fund model (clients / transactions / valuations).
+ * Canonical dataset for the fund, in the v2 model (clients / transactions /
+ * valuations), reconciled against the Robinhood account as of 2026-07-04
+ * (total value $12,311.98, all-time gain +$4,414.71 → ~$7,897.27 deposited).
  *
- * Each transaction's `account_value_before` is backfilled with the running sum
- * of prior net deposits so the NAV per unit stays flat across all historical
- * deposits — this reproduces the original spreadsheet's allocations exactly
- * (we have no historical interim valuations to price against). The final
- * valuation then strikes the current NAV. Deposits recorded from now on are
- * priced against the real account value entered at the time.
+ * Pricing:
+ * - Pre-spreadsheet deposits (through 2025-10-19) are priced flat (NAV 100) via
+ *   account_value_before = cumulative prior deposits — we have no interim marks
+ *   for that era, and this reproduces the original spreadsheet's allocations.
+ * - Later deposits are priced at the real fund value on the day (from Robinhood).
+ * - Ali made additional deposits since the spreadsheet whose exact dates are
+ *   unknown; the ~$907.78 gap (confirmed by Robinhood's totals) is modeled as
+ *   three evenly-spread "reconciliation" deposits at the known marks. These are
+ *   flagged and can be replaced with exact dates later without affecting the
+ *   totals (which are pinned by the current valuation).
  *
- * Safe to re-run: skips itself if any client already exists.
- *
- * Usage: npm run seed
+ * Safe to re-run: seed skips itself if any client already exists.
+ * Usage: npm run seed   (fresh DB)   |   npm run reconcile   (rebuild existing DB)
  */
 import { addClient, addTransaction, addValuation, listClients } from "../lib/portfolio";
+import { getDb } from "../lib/db";
 
-type Entry = { client: "Ali" | "Mom"; date: string; amount: number; note?: string };
+type Tx = { client: "Ali" | "Mom"; date: string; amount: number; avb: number | null; note?: string };
 
-const ENTRIES: Entry[] = [
-  { client: "Mom", date: "2024-12-01", amount: 700.0, note: "Originally 'December 2024 to March 2025' — verify date" },
-  { client: "Mom", date: "2025-03-21", amount: 200.0 },
-  { client: "Mom", date: "2025-03-23", amount: 50.0 },
-  { client: "Mom", date: "2025-05-02", amount: 250.0 },
-  { client: "Mom", date: "2025-06-23", amount: 200.0 },
-  { client: "Mom", date: "2025-07-22", amount: 200.0 },
-  { client: "Mom", date: "2025-08-22", amount: 200.0 },
-  { client: "Mom", date: "2025-08-28", amount: 500.0 },
-  { client: "Ali", date: "2025-09-14", amount: 2624.49 },
-  { client: "Ali", date: "2025-09-15", amount: 265.0, note: "Date was blank in original spreadsheet — verify" },
-  { client: "Mom", date: "2025-09-16", amount: 250.0 },
-  { client: "Mom", date: "2025-10-19", amount: 300.0 },
-  { client: "Mom", date: "2025-10-20", amount: 200.0, note: "Date was blank in original spreadsheet — verify" },
+const RECON = "Estimated timing — reconciled from Robinhood totals; refine when exact dates are known";
+
+// Chronological. `avb` = fund total value immediately before the deposit.
+const TRANSACTIONS: Tx[] = [
+  // Flat era (NAV 100; avb = cumulative prior deposits).
+  { client: "Mom", date: "2024-12-01", amount: 700.0, avb: 0, note: "Originally 'Dec 2024–Mar 2025' — verify date" },
+  { client: "Mom", date: "2025-03-21", amount: 200.0, avb: 700 },
+  { client: "Mom", date: "2025-03-23", amount: 50.0, avb: 900 },
+  { client: "Mom", date: "2025-05-02", amount: 250.0, avb: 950 },
+  { client: "Mom", date: "2025-06-23", amount: 200.0, avb: 1200 },
+  { client: "Mom", date: "2025-07-22", amount: 200.0, avb: 1400 },
+  { client: "Mom", date: "2025-08-22", amount: 200.0, avb: 1600 },
+  { client: "Mom", date: "2025-08-28", amount: 500.0, avb: 1800 },
+  { client: "Mom", date: "2025-08-28", amount: 200.0, avb: 2300 },
+  { client: "Ali", date: "2025-09-14", amount: 2624.49, avb: 2500 },
+  { client: "Ali", date: "2025-09-15", amount: 265.0, avb: 5124.49 },
+  { client: "Mom", date: "2025-09-16", amount: 250.0, avb: 5389.49 },
+  { client: "Mom", date: "2025-10-19", amount: 300.0, avb: 5639.49 },
+  // Post-spreadsheet, priced at real Robinhood marks.
+  { client: "Mom", date: "2025-12-19", amount: 500.0, avb: 8996.6 },
+  { client: "Ali", date: "2025-12-20", amount: 302.59, avb: 9496.6, note: RECON },
+  { client: "Mom", date: "2026-03-04", amount: 250.0, avb: 8413.39 },
+  { client: "Ali", date: "2026-03-05", amount: 302.59, avb: 8663.39, note: RECON },
+  { client: "Mom", date: "2026-06-27", amount: 300.0, avb: 11950.09 },
+  { client: "Ali", date: "2026-06-28", amount: 302.6, avb: 12250.09, note: RECON },
 ];
 
-const FINAL_VALUATION = { totalValue: 6844.67, note: "Imported from spreadsheet migration" };
+const VALUATIONS: { date: string; value: number; note?: string }[] = [
+  { date: "2025-10-31", value: 6844.67, note: "Estimated from original spreadsheet" },
+  { date: "2026-07-04", value: 12311.98, note: "Robinhood account value" },
+];
 
-async function main() {
-  const existing = await listClients();
-  if (existing.length > 0) {
-    console.log("Clients already exist — skipping seed to avoid duplicates.");
-    console.log(existing.map((c) => c.name));
-    return;
-  }
-
+/** Inserts the full dataset. Assumes clients/transactions/valuations are empty. */
+export async function seedData() {
   await addClient({ name: "Ali" });
   await addClient({ name: "Mom" });
   const clients = await listClients();
   const idByName = new Map(clients.map((c) => [c.name, c.id]));
 
-  // Insert in chronological order, backfilling account_value_before with the
-  // cumulative prior net deposits (flat NAV — see file header).
-  const chronological = [...ENTRIES].sort((a, b) => a.date.localeCompare(b.date));
-  let cumulative = 0;
-  for (const e of chronological) {
+  for (const t of TRANSACTIONS) {
     await addTransaction({
-      clientId: idByName.get(e.client)!,
-      date: e.date,
-      amount: e.amount,
-      accountValueBefore: cumulative,
-      note: e.note,
+      clientId: idByName.get(t.client)!,
+      date: t.date,
+      amount: t.amount,
+      accountValueBefore: t.avb,
+      note: t.note,
     });
-    cumulative += e.amount;
   }
-
-  const today = new Date().toISOString().slice(0, 10);
-  await addValuation(today, FINAL_VALUATION.totalValue, FINAL_VALUATION.note);
-
-  console.log(`Seed complete: 2 clients, ${ENTRIES.length} transactions, 1 valuation.`);
+  for (const v of VALUATIONS) {
+    await addValuation(v.date, v.value, v.note);
+  }
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  });
+/** Deletes all data — used by the reconcile script before re-seeding. */
+export async function wipeAll() {
+  const db = await getDb();
+  await db.execute("DELETE FROM transactions");
+  await db.execute("DELETE FROM valuations");
+  await db.execute("DELETE FROM clients");
+}
+
+async function main() {
+  const existing = await listClients();
+  if (existing.length > 0) {
+    console.log("Clients already exist — skipping seed. Use `npm run reconcile` to rebuild.");
+    return;
+  }
+  await seedData();
+  console.log(`Seed complete: 2 clients, ${TRANSACTIONS.length} transactions, ${VALUATIONS.length} valuations.`);
+}
+
+// Only run when invoked directly (not when imported by reconcile).
+if (process.argv[1] && process.argv[1].endsWith("seed.ts")) {
+  main()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}
