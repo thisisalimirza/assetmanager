@@ -91,9 +91,15 @@ export function TransactionModal({
             />
           </div>
         </div>
+        {!isEdit && latestValue > 0 && (
+          <p className="-mt-1 rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+            ← Prefilled with the last recorded value. Update it to your{" "}
+            <strong>current Robinhood total</strong> right now, or the client&apos;s units will be mispriced.
+          </p>
+        )}
         <p className="-mt-1 text-xs text-zinc-400">
           Total fund value right before this transaction — used to price the client&apos;s units fairly.
-          Leave blank only for the very first deposit.
+          Leave blank only for the very first deposit ever.
         </p>
 
         <div>
