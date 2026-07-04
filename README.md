@@ -1,73 +1,107 @@
 # Portfolio Tracker
 
-A small webapp for tracking a shared investment portfolio contributed to by
-multiple people (e.g. you and family members), replacing a spreadsheet-based
-workflow. It tracks:
+A lean webapp for a small independent advisor / fund manager to track and manage
+investments across multiple clients (including yourself), replacing a
+spreadsheet workflow. It models:
 
-- **Contributors** — the people who have money in the portfolio.
-- **Contributions** — dated deposits (or withdrawals, as negative amounts)
-  per contributor. These sum to each person's cost basis.
-- **Snapshots** — the portfolio's total value at a point in time (you enter
-  this by hand, e.g. by checking Robinhood). The most recent snapshot is used
-  as "current value."
+- **Clients** — everyone with money in the fund (you and the people whose money
+  you manage), with optional contact details for statements.
+- **Transactions** — dated deposits and withdrawals per client. Each records the
+  fund's total value _immediately before_ it, which is used to price units.
+- **Valuations** — the fund's total market value at a point in time (entered by
+  hand, e.g. from Robinhood). The most recent one drives every client's current
+  balance.
 
-From these, the dashboard computes total profit/loss and splits it pro-rata
-by each contributor's share of total contributions (dollar-weighted, not
-time-weighted — a dollar contributed yesterday counts the same as a dollar
-contributed years ago). This matches the spreadsheet model it replaces. If
-you later want time-weighted returns (so early money is credited for
-compounding longer), that would replace the `share` calculation in
-`src/lib/portfolio.ts` with an XIRR-style calculation — flagging it here in
-case it matters once contribution timing varies more.
+## How the accounting works (unit / NAV model)
+
+The fund is unitized like a real investment fund. When a client deposits money,
+they buy **units** at the current NAV per unit (fund value ÷ units outstanding);
+a withdrawal redeems units the same way. A client's balance is
+`their units × current NAV per unit`.
+
+This correctly attributes gains and losses only to the period each dollar was
+actually invested. A client who deposits after the fund has already gained does
+**not** get handed a slice of those earlier gains — which the naive
+"split profit by share of total contributions" approach gets wrong. Fund-level
+performance is reported as a **time-weighted return (TWR)** off the NAV-per-unit
+series, independent of when cash flowed in.
+
+The math is recomputed from the transaction ledger on every read (nothing
+derived is stored), and is covered by a scenario test:
+
+```bash
+npm run verify
+```
 
 ## Stack
 
-- **Next.js (App Router)** — server-rendered pages, server actions for
-  mutations. No separate API server.
-- **SQLite via [Turso](https://turso.tech)** (libSQL) — in production. Turso
-  is a hosted SQLite service, chosen because Vercel's serverless functions
-  don't have a persistent filesystem, so a plain on-disk SQLite file won't
-  survive between requests/deploys there. Locally, the same `@libsql/client`
-  talks to a plain file on disk, so no external service is needed for
-  day-to-day development.
+- **Next.js (App Router)** — server-rendered pages + server actions. No separate
+  API server. Client-facing statements are print-optimized pages ("Download PDF"
+  → browser print-to-PDF), so there's no heavy PDF/Chromium dependency.
+- **SQLite via [Turso](https://turso.tech)** (libSQL) in production — a hosted
+  SQLite service, because Vercel's serverless filesystem isn't persistent so a
+  plain on-disk SQLite file won't survive there. Locally, the same
+  `@libsql/client` talks to a file on disk, so no external service is needed for
+  development.
+- **Auth** — a single shared password (see env vars below) protects the whole
+  app via middleware; there's no multi-user system.
+
+## Environment variables
+
+| Variable              | Required        | Purpose                                             |
+| --------------------- | --------------- | --------------------------------------------------- |
+| `APP_PASSWORD`        | yes (prod)      | The password to sign in.                            |
+| `SESSION_SECRET`      | yes (prod)      | Secret used to sign the session cookie (any random string). |
+| `TURSO_DATABASE_URL`  | prod only       | Turso database URL. Omit locally to use `local.db`. |
+| `TURSO_AUTH_TOKEN`    | prod only       | Turso auth token.                                   |
+
+Locally, `APP_PASSWORD`/`SESSION_SECRET` fall back to insecure defaults so the
+app runs without setup — set real values before deploying.
 
 ## Local development
 
 ```bash
 npm install
-npm run dev
+APP_PASSWORD=yourpass SESSION_SECRET=dev npm run dev
 ```
 
-By default this uses a local SQLite file (`local.db`, gitignored) — no setup
-required. Tables are created automatically on first run.
-
-To import your historical data from the old spreadsheet (Ali/Mom
-contributions + an initial snapshot), run once against a fresh database:
+Uses a local SQLite file (`local.db`, gitignored) by default; tables are created
+automatically on first run. To load the historical Ali/Mom data:
 
 ```bash
 npm run seed
 ```
 
-It skips itself if contributors already exist, so it's safe even if you
-forget and run it twice.
+It skips itself if any client already exists, so it's safe to run twice.
+
+## Migrating from the original spreadsheet-era schema
+
+If the database still has the original v1 tables (`contributors` /
+`contributions` / `snapshots`), they are migrated automatically on first run
+into the new `clients` / `transactions` / `valuations` tables. Because v1 never
+recorded interim valuations, migrated deposits are priced at a flat NAV — this
+reproduces the exact balances the old model showed, so **nobody's balance jumps
+at migration**. Only deposits recorded _after_ migrating are priced against real
+market values.
 
 ## Deploying to Vercel
 
-1. **Create a Turso database** (free tier is plenty for this):
-   - Install the CLI: `curl -sSfL https://get.tur.so/install.sh | bash`
+1. **Create a Turso database** (free tier is plenty):
+   - `curl -sSfL https://get.tur.so/install.sh | bash`
    - `turso auth login`
    - `turso db create portfolio-tracker`
-   - `turso db show portfolio-tracker --url` → this is `TURSO_DATABASE_URL`
-   - `turso db tokens create portfolio-tracker` → this is `TURSO_AUTH_TOKEN`
-2. **Import your existing data into Turso** (optional, one-time): run
-   `npm run seed` locally with `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`
-   set in your shell so it seeds the remote database instead of the local
-   file.
-3. **Deploy to Vercel**: import the repo at [vercel.com/new](https://vercel.com/new),
-   and set the environment variables `TURSO_DATABASE_URL` and
-   `TURSO_AUTH_TOKEN` in the project settings. No other configuration is
-   needed — Vercel auto-detects Next.js.
+   - `turso db show portfolio-tracker --url` → `TURSO_DATABASE_URL`
+   - `turso db tokens create portfolio-tracker` → `TURSO_AUTH_TOKEN`
+2. **(Optional) seed the remote DB once**: run `npm run seed` locally with
+   `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` exported in your shell.
+3. **Deploy**: import the repo at [vercel.com/new](https://vercel.com/new) and
+   set `APP_PASSWORD`, `SESSION_SECRET`, `TURSO_DATABASE_URL`, and
+   `TURSO_AUTH_TOKEN` as Production environment variables. Vercel auto-detects
+   Next.js — no other config needed.
 
-Since this is meant for personal/family use with no login system, don't
-share the deployed URL publicly — anyone with the link can view and edit
-the data.
+## Possible next steps
+
+- Management / performance fees (carry, high-water marks) per client.
+- Per-position (ticker-level) holdings and allocation breakdowns.
+- One-click server-generated PDF statements emailed to clients (e.g. via
+  `@react-pdf/renderer`) instead of browser print-to-PDF.
