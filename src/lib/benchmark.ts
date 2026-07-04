@@ -6,6 +6,9 @@ import { getDb } from "./db";
 export const BENCHMARK_SYMBOL = "spy.us";
 export const BENCHMARK_LABEL = "S&P 500";
 
+// Stooq mirrors — .com is sometimes geo/rate-limited; .pl usually still works.
+const STOOQ_HOSTS = ["stooq.com", "stooq.pl"];
+
 function compact(date: string): string {
   return date.slice(0, 10).replace(/-/g, "");
 }
@@ -28,11 +31,59 @@ async function maxCachedDate(symbol: string): Promise<string | null> {
   return d == null ? null : String(d);
 }
 
+function parseCsv(text: string): { date: string; close: number }[] {
+  const rows: { date: string; close: number }[] = [];
+  for (const line of text.trim().split("\n").slice(1)) {
+    const cols = line.split(",");
+    const date = cols[0];
+    const close = Number(cols[4]);
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(close)) {
+      rows.push({ date, close });
+    }
+  }
+  return rows;
+}
+
+async function fetchFromHost(
+  host: string,
+  symbol: string,
+  from: string,
+  to: string
+): Promise<{ date: string; close: number }[] | null> {
+  const url = `https://${host}/q/d/l/?s=${symbol}&i=d&d1=${compact(from)}&d2=${compact(to)}`;
+  const res = await fetch(url, {
+    cache: "no-store",
+    // Stooq's CSV endpoint rejects/rate-limits requests without a browser-like UA.
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      Accept: "text/csv,*/*",
+    },
+  });
+  if (!res.ok) {
+    console.error(`[benchmark] ${host} responded ${res.status} ${res.statusText}`);
+    return null;
+  }
+  const text = await res.text();
+  if (/exceeded|limit/i.test(text) && text.length < 200) {
+    console.error(`[benchmark] ${host} rate-limited us: ${text.trim()}`);
+    return null;
+  }
+  const rows = parseCsv(text);
+  if (rows.length === 0) {
+    console.error(`[benchmark] ${host} returned no parseable rows (first 100 chars): ${text.slice(0, 100)}`);
+    return null;
+  }
+  return rows;
+}
+
 /**
  * Ensures we have cached daily closes for `symbol` from `fromDate` to today.
  * Fetches from Stooq only when the cache is missing or more than a couple of
- * days stale. Network/parse failures are swallowed — callers degrade to
- * "benchmark unavailable" rather than erroring.
+ * days stale. Network/parse failures are logged (check Vercel function logs)
+ * and swallowed — callers degrade to "benchmark unavailable" rather than
+ * throwing, since a slow/unreliable third-party price feed shouldn't break
+ * the dashboard.
  */
 export async function ensureBenchmarkData(symbol: string, fromDate: string): Promise<void> {
   const today = todayIso();
@@ -42,33 +93,25 @@ export async function ensureBenchmarkData(symbol: string, fromDate: string): Pro
   }
 
   const from = latest && latest > fromDate ? latest : fromDate;
-  const url = `https://stooq.com/q/d/l/?s=${symbol}&i=d&d1=${compact(from)}&d2=${compact(today)}`;
 
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return;
-    const text = await res.text();
-    const rows: { date: string; close: number }[] = [];
-    for (const line of text.trim().split("\n").slice(1)) {
-      const cols = line.split(",");
-      const date = cols[0];
-      const close = Number(cols[4]);
-      if (date && /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(close)) {
-        rows.push({ date, close });
-      }
+  let rows: { date: string; close: number }[] | null = null;
+  for (const host of STOOQ_HOSTS) {
+    try {
+      rows = await fetchFromHost(host, symbol, from, today);
+      if (rows) break;
+    } catch (e) {
+      console.error(`[benchmark] fetch from ${host} threw:`, e);
     }
-    if (rows.length === 0) return;
-
-    const db = await getDb();
-    await db.batch(
-      rows.map((r) => ({
-        sql: "INSERT OR REPLACE INTO benchmark_prices (symbol, date, close) VALUES (?, ?, ?)",
-        args: [symbol, r.date, r.close],
-      }))
-    );
-  } catch {
-    // leave cache as-is; callers handle missing data
   }
+  if (!rows) return;
+
+  const db = await getDb();
+  await db.batch(
+    rows.map((r) => ({
+      sql: "INSERT OR REPLACE INTO benchmark_prices (symbol, date, close) VALUES (?, ?, ?)",
+      args: [symbol, r.date, r.close],
+    }))
+  );
 }
 
 /** Latest close on or before `date`, or null if we have no data that early. */
