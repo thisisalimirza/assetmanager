@@ -1,6 +1,7 @@
 import { createTransaction, editTransaction, removeTransaction } from "@/app/actions";
 import type { Client, Transaction } from "@/lib/portfolio";
-import { Modal, ModalSubmit } from "./Modal";
+import { Modal } from "./Modal";
+import { ModalForm } from "./ModalForm";
 import { ConfirmSubmitButton } from "./ConfirmSubmitButton";
 
 const inputClass =
@@ -36,7 +37,7 @@ export function TransactionModal({
 
   return (
     <Modal label={label} title={isEdit ? "Edit transaction" : "Record transaction"} variant={variant} className={className}>
-      <form action={isEdit ? editTransaction : createTransaction} className="flex flex-col gap-3">
+      <ModalForm action={isEdit ? editTransaction : createTransaction} submitLabel={isEdit ? "Save changes" : "Record transaction"}>
         {isEdit && <input type="hidden" name="id" value={transaction!.id} />}
 
         <div>
@@ -106,11 +107,7 @@ export function TransactionModal({
           <label className={labelClass}>Note (optional)</label>
           <input name="note" defaultValue={transaction?.note ?? ""} className={inputClass} />
         </div>
-
-        <div className="mt-1 flex items-center gap-2">
-          <ModalSubmit>{isEdit ? "Save changes" : "Record transaction"}</ModalSubmit>
-        </div>
-      </form>
+      </ModalForm>
 
       {isEdit && (
         <form className="mt-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">

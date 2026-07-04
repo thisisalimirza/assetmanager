@@ -1,5 +1,7 @@
 "use client";
 
+import { useModalClose } from "./Modal";
+
 export function ConfirmSubmitButton({
   confirmMessage,
   className,
@@ -11,6 +13,7 @@ export function ConfirmSubmitButton({
   formAction?: (formData: FormData) => void;
   children: React.ReactNode;
 }) {
+  const close = useModalClose();
   return (
     <button
       type="submit"
@@ -19,7 +22,10 @@ export function ConfirmSubmitButton({
       onClick={(e) => {
         if (!confirm(confirmMessage)) {
           e.preventDefault();
+          return;
         }
+        // Close the enclosing modal (if any) after the submit dispatches.
+        setTimeout(close, 0);
       }}
     >
       {children}

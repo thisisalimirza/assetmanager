@@ -450,3 +450,82 @@ export async function getClientStatementData(id: number): Promise<ClientStatemen
     twr: fund.twr,
   };
 }
+
+// --- Period statements ---
+
+export type PeriodStatement = {
+  client: Client;
+  from: string;
+  to: string;
+  openingValue: number;
+  deposits: number;
+  withdrawals: number;
+  gain: number;
+  closingValue: number;
+  periodReturn: number;
+  transactions: Transaction[]; // in-period, oldest first
+};
+
+export async function getClientPeriodStatement(
+  id: number,
+  from: string,
+  to: string
+): Promise<PeriodStatement | null> {
+  const client = await getClient(id);
+  if (!client) return null;
+  const [transactions, valuations] = await Promise.all([listTransactions(), listValuations()]);
+  const ledger = buildLedger(transactions, valuations);
+  const sorted = [...transactions].sort(compareTx);
+
+  // Per-client units as of a boundary (replays all clients for correct pricing).
+  const clientUnitsAt = (boundary: string, mode: "before" | "through"): number => {
+    let totalUnits = 0;
+    let lastNav = SEED_NAV;
+    let mine = 0;
+    for (const tx of sorted) {
+      if (mode === "before" ? tx.date >= boundary : tx.date > boundary) break;
+      let nav: number;
+      if (totalUnits <= 0) nav = SEED_NAV;
+      else if (tx.accountValueBefore != null && tx.accountValueBefore > 0) nav = tx.accountValueBefore / totalUnits;
+      else nav = lastNav;
+      const d = tx.amount / nav;
+      if (tx.clientId === id) mine += d;
+      totalUnits += d;
+      lastNav = nav;
+    }
+    return mine;
+  };
+
+  const navAt = (boundary: string, mode: "before" | "through"): number => {
+    let nav = 0;
+    for (const p of ledger.navSeries) {
+      if (mode === "before" ? p.date < boundary : p.date <= boundary) nav = p.navPerUnit;
+      else break;
+    }
+    return nav;
+  };
+
+  const openingValue = clientUnitsAt(from, "before") * navAt(from, "before");
+  const closingValue = clientUnitsAt(to, "through") * navAt(to, "through");
+
+  const inPeriod = sorted.filter((t) => t.clientId === id && t.date >= from && t.date <= to);
+  const deposits = inPeriod.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+  const withdrawals = inPeriod.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+  const netFlows = deposits - withdrawals;
+  const gain = closingValue - openingValue - netFlows;
+  const base = openingValue + deposits;
+  const periodReturn = base > 0 ? gain / base : 0;
+
+  return {
+    client,
+    from,
+    to,
+    openingValue,
+    deposits,
+    withdrawals,
+    gain,
+    closingValue,
+    periodReturn,
+    transactions: inPeriod,
+  };
+}

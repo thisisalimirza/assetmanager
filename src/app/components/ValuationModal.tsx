@@ -1,6 +1,7 @@
 import { createValuation, editValuation, removeValuation } from "@/app/actions";
 import type { Valuation } from "@/lib/portfolio";
-import { Modal, ModalSubmit } from "./Modal";
+import { Modal } from "./Modal";
+import { ModalForm } from "./ModalForm";
 import { ConfirmSubmitButton } from "./ConfirmSubmitButton";
 
 const inputClass =
@@ -29,7 +30,7 @@ export function ValuationModal({
 
   return (
     <Modal label={label} title={isEdit ? "Edit valuation" : "Record valuation"} variant={variant} className={className}>
-      <form action={isEdit ? editValuation : createValuation} className="flex flex-col gap-3">
+      <ModalForm action={isEdit ? editValuation : createValuation} submitLabel={isEdit ? "Save changes" : "Record valuation"}>
         {isEdit && <input type="hidden" name="id" value={valuation!.id} />}
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -54,8 +55,7 @@ export function ValuationModal({
           <label className={labelClass}>Note (optional)</label>
           <input name="note" defaultValue={valuation?.note ?? ""} className={inputClass} />
         </div>
-        <ModalSubmit>{isEdit ? "Save changes" : "Record valuation"}</ModalSubmit>
-      </form>
+      </ModalForm>
 
       {isEdit && (
         <form className="mt-2 border-t border-zinc-200 pt-3 dark:border-zinc-800">

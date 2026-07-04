@@ -28,6 +28,13 @@ CREATE TABLE IF NOT EXISTS valuations (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS benchmark_prices (
+  symbol TEXT NOT NULL,
+  date TEXT NOT NULL,
+  close REAL NOT NULL,
+  PRIMARY KEY (symbol, date)
+);
+
 CREATE INDEX IF NOT EXISTS idx_transactions_client ON transactions(client_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_valuations_date ON valuations(date);
