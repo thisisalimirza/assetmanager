@@ -7,12 +7,16 @@
  * - Pre-spreadsheet deposits (through 2025-10-19) are priced flat (NAV 100) via
  *   account_value_before = cumulative prior deposits — we have no interim marks
  *   for that era, and this reproduces the original spreadsheet's allocations.
- * - Later deposits are priced at the real fund value on the day (from Robinhood).
- * - Ali made additional deposits since the spreadsheet whose exact dates are
- *   unknown; the ~$907.78 gap (confirmed by Robinhood's totals) is modeled as
- *   three evenly-spread "reconciliation" deposits at the known marks. These are
- *   flagged and can be replaced with exact dates later without affecting the
- *   totals (which are pinned by the current valuation).
+ * - Deposits from Dec 2025 onward are priced at real Robinhood account-value
+ *   marks where we have one.
+ * - Ali's own deposits/withdrawals for Jan 1 – Jul 4, 2026 come directly from
+ *   his Robinhood activity export (real dates and amounts). Where we lack a
+ *   real total-value mark for one of those dates, `avb` is linearly
+ *   interpolated (by day-count) between the nearest real marks before/after
+ *   it — flagged INTERP. This is materially more accurate than a flat
+ *   estimate, though still approximate; replace with a real mark if one is
+ *   ever found. Only Ali's 2025-12-20 entry remains a flat placeholder — it's
+ *   outside the CSV export's coverage.
  *
  * Safe to re-run: seed skips itself if any client already exists.
  * Usage: npm run seed   (fresh DB)   |   npm run reconcile   (rebuild existing DB)
@@ -23,6 +27,7 @@ import { getDb } from "../lib/db";
 type Tx = { client: "Ali" | "Mom"; date: string; amount: number; avb: number | null; note?: string };
 
 const RECON = "Estimated timing — reconciled from Robinhood totals; refine when exact dates are known";
+const INTERP = "Priced via linear interpolation between known account values — approximate";
 
 // Chronological. `avb` = fund total value immediately before the deposit.
 const TRANSACTIONS: Tx[] = [
@@ -42,12 +47,24 @@ const TRANSACTIONS: Tx[] = [
   { client: "Mom", date: "2025-10-19", amount: 300.0, avb: 5639.49 },
   // Post-spreadsheet, priced at real Robinhood marks.
   { client: "Mom", date: "2025-12-19", amount: 500.0, avb: 8996.6 },
+  // Only remaining flat placeholder — outside the Robinhood CSV export's
+  // coverage (Jan 2026 onward), so there's no real data to replace it with yet.
   { client: "Ali", date: "2025-12-20", amount: 302.59, avb: 9496.6, note: RECON },
-  { client: "Mom", date: "2026-03-04", amount: 250.0, avb: 8413.39 },
-  { client: "Ali", date: "2026-03-05", amount: 302.59, avb: 8663.39, note: RECON },
-  // Ali's recon deposit here no longer assumes Mom's $300 was already in the
-  // pot (see note below) — avb is just the real 6/27 mark.
-  { client: "Ali", date: "2026-06-28", amount: 302.6, avb: 11950.09, note: RECON },
+
+  // From here on, every Ali entry is a real dated amount from the Robinhood
+  // activity export, replacing the old flat reconciliation placeholders.
+  { client: "Ali", date: "2026-01-02", amount: 570.0, avb: 9555.74, note: INTERP }, // $70 + $500 ACH deposits
+  { client: "Ali", date: "2026-01-20", amount: 230.0, avb: 9218.65, note: INTERP },
+  { client: "Ali", date: "2026-02-02", amount: 200.0, avb: 8975.2, note: INTERP },
+  { client: "Ali", date: "2026-02-23", amount: 500.0, avb: 8581.93, note: INTERP },
+  { client: "Mom", date: "2026-03-04", amount: 250.0, avb: 8413.39 }, // real mark
+  { client: "Ali", date: "2026-03-09", amount: 10.0, avb: 8806.29, note: INTERP },
+  { client: "Ali", date: "2026-03-11", amount: -1.0, avb: 8863.45, note: INTERP + " ($9 deposit, $10 reversal)" },
+  { client: "Ali", date: "2026-03-16", amount: 200.0, avb: 9006.35, note: INTERP },
+  { client: "Ali", date: "2026-03-23", amount: 250.0, avb: 9206.41, note: INTERP }, // $200 + $50 ACH deposits
+  { client: "Ali", date: "2026-04-29", amount: -425.0, avb: 10263.87, note: INTERP + " (wire withdrawal + fee)" },
+  { client: "Ali", date: "2026-04-30", amount: -325.0, avb: 10292.45, note: INTERP + " (wire withdrawal + fee)" },
+  { client: "Ali", date: "2026-05-11", amount: -185.0, avb: 10606.83, note: INTERP + " (wire withdrawal + fee)" },
   // Mom sent this $300 on 6/27, but it sat as cash outside Robinhood until Ali
   // actually deposited it into the account on 7/4 — priced at the real 7/4
   // pre-money value, not the 6/27 mark it was originally (incorrectly) dated to.

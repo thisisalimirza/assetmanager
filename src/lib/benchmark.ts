@@ -1,17 +1,17 @@
 import { getDb } from "./db";
 
 // Default benchmark: the S&P 500 tracked via the SPY ETF. Prices come from
-// Stooq's free daily CSV endpoint (no API key). Fetched server-side and cached
-// in the benchmark_prices table so we don't hit the network on every render.
-export const BENCHMARK_SYMBOL = "spy.us";
+// Alpha Vantage's free TIME_SERIES_DAILY endpoint (requires a free API key —
+// see README). We use a keyed API rather than a scraping-style endpoint
+// (e.g. Stooq) because free CSV-export endpoints commonly block requests
+// from cloud/datacenter IP ranges like Vercel's, regardless of headers —
+// Alpha Vantage is built for exactly this kind of programmatic access.
+// Fetched server-side and cached in the benchmark_prices table so we don't
+// hit the network (or its daily rate limit) on every render.
+export const BENCHMARK_SYMBOL = "SPY";
 export const BENCHMARK_LABEL = "S&P 500";
 
-// Stooq mirrors — .com is sometimes geo/rate-limited; .pl usually still works.
-const STOOQ_HOSTS = ["stooq.com", "stooq.pl"];
-
-function compact(date: string): string {
-  return date.slice(0, 10).replace(/-/g, "");
-}
+const ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -31,47 +31,44 @@ async function maxCachedDate(symbol: string): Promise<string | null> {
   return d == null ? null : String(d);
 }
 
-function parseCsv(text: string): { date: string; close: number }[] {
+async function fetchFromAlphaVantage(
+  symbol: string,
+  apiKey: string
+): Promise<{ date: string; close: number }[] | null> {
+  const url = `${ALPHA_VANTAGE_URL}?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(
+    symbol
+  )}&outputsize=full&apikey=${encodeURIComponent(apiKey)}`;
+
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) {
+    console.error(`[benchmark] Alpha Vantage responded ${res.status} ${res.statusText}`);
+    return null;
+  }
+  const json = (await res.json()) as Record<string, unknown>;
+
+  if (json["Error Message"] || json["Note"] || json["Information"]) {
+    console.error(
+      `[benchmark] Alpha Vantage error/rate-limit:`,
+      json["Error Message"] || json["Note"] || json["Information"]
+    );
+    return null;
+  }
+
+  const series = json["Time Series (Daily)"] as Record<string, Record<string, string>> | undefined;
+  if (!series) {
+    console.error(`[benchmark] Alpha Vantage response missing time series (keys: ${Object.keys(json).join(", ")})`);
+    return null;
+  }
+
   const rows: { date: string; close: number }[] = [];
-  for (const line of text.trim().split("\n").slice(1)) {
-    const cols = line.split(",");
-    const date = cols[0];
-    const close = Number(cols[4]);
-    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(close)) {
+  for (const [date, day] of Object.entries(series)) {
+    const close = Number(day["4. close"]);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(date) && Number.isFinite(close)) {
       rows.push({ date, close });
     }
   }
-  return rows;
-}
-
-async function fetchFromHost(
-  host: string,
-  symbol: string,
-  from: string,
-  to: string
-): Promise<{ date: string; close: number }[] | null> {
-  const url = `https://${host}/q/d/l/?s=${symbol}&i=d&d1=${compact(from)}&d2=${compact(to)}`;
-  const res = await fetch(url, {
-    cache: "no-store",
-    // Stooq's CSV endpoint rejects/rate-limits requests without a browser-like UA.
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      Accept: "text/csv,*/*",
-    },
-  });
-  if (!res.ok) {
-    console.error(`[benchmark] ${host} responded ${res.status} ${res.statusText}`);
-    return null;
-  }
-  const text = await res.text();
-  if (/exceeded|limit/i.test(text) && text.length < 200) {
-    console.error(`[benchmark] ${host} rate-limited us: ${text.trim()}`);
-    return null;
-  }
-  const rows = parseCsv(text);
   if (rows.length === 0) {
-    console.error(`[benchmark] ${host} returned no parseable rows (first 100 chars): ${text.slice(0, 100)}`);
+    console.error("[benchmark] Alpha Vantage returned a time series with no parseable rows");
     return null;
   }
   return rows;
@@ -79,11 +76,12 @@ async function fetchFromHost(
 
 /**
  * Ensures we have cached daily closes for `symbol` from `fromDate` to today.
- * Fetches from Stooq only when the cache is missing or more than a couple of
- * days stale. Network/parse failures are logged (check Vercel function logs)
- * and swallowed — callers degrade to "benchmark unavailable" rather than
- * throwing, since a slow/unreliable third-party price feed shouldn't break
- * the dashboard.
+ * Fetches from Alpha Vantage only when the cache is missing or more than a
+ * couple of days stale (its free tier has a modest daily rate limit, and we
+ * only need one fresh pull every few days). Network/parse failures are
+ * logged (check Vercel function logs) and swallowed — callers degrade to
+ * "benchmark unavailable" rather than throwing, since a third-party price
+ * feed being briefly down shouldn't break the dashboard.
  */
 export async function ensureBenchmarkData(symbol: string, fromDate: string): Promise<void> {
   const today = todayIso();
@@ -92,26 +90,27 @@ export async function ensureBenchmarkData(symbol: string, fromDate: string): Pro
     return; // fresh enough
   }
 
-  const from = latest && latest > fromDate ? latest : fromDate;
-
-  let rows: { date: string; close: number }[] | null = null;
-  for (const host of STOOQ_HOSTS) {
-    try {
-      rows = await fetchFromHost(host, symbol, from, today);
-      if (rows) break;
-    } catch (e) {
-      console.error(`[benchmark] fetch from ${host} threw:`, e);
-    }
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+  if (!apiKey) {
+    console.error("[benchmark] ALPHA_VANTAGE_API_KEY is not set — skipping benchmark fetch");
+    return;
   }
+
+  const rows = await fetchFromAlphaVantage(symbol, apiKey);
   if (!rows) return;
 
   const db = await getDb();
-  await db.batch(
-    rows.map((r) => ({
-      sql: "INSERT OR REPLACE INTO benchmark_prices (symbol, date, close) VALUES (?, ?, ?)",
-      args: [symbol, r.date, r.close],
-    }))
-  );
+  // Alpha Vantage's full-history response can be a few thousand rows; batch
+  // in chunks to stay well under libSQL's per-request statement limits.
+  const CHUNK = 500;
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    await db.batch(
+      rows.slice(i, i + CHUNK).map((r) => ({
+        sql: "INSERT OR REPLACE INTO benchmark_prices (symbol, date, close) VALUES (?, ?, ?)",
+        args: [symbol, r.date, r.close],
+      }))
+    );
+  }
 }
 
 /** Latest close on or before `date`, or null if we have no data that early. */
