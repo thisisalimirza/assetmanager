@@ -54,6 +54,7 @@ npm run verify
 | `SESSION_SECRET`      | yes (prod)      | Secret used to sign the session cookie (any random string). |
 | `TURSO_DATABASE_URL`  | prod only       | Turso database URL. Omit locally to use `local.db`. |
 | `TURSO_AUTH_TOKEN`    | prod only       | Turso auth token.                                   |
+| `ALPHA_VANTAGE_API_KEY` | optional      | Free key from [alphavantage.co/support/#api-key](https://www.alphavantage.co/support/#api-key), used to fetch S&P 500 prices for the alpha/benchmark comparison. Without it, alpha simply shows "unavailable" — everything else works fine. |
 
 Locally, `APP_PASSWORD`/`SESSION_SECRET` fall back to insecure defaults so the
 app runs without setup — set real values before deploying.
@@ -101,9 +102,14 @@ market values.
 2. **(Optional) seed the remote DB once**: run `npm run seed` locally with
    `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` exported in your shell.
 3. **Deploy**: import the repo at [vercel.com/new](https://vercel.com/new) and
-   set `APP_PASSWORD`, `SESSION_SECRET`, `TURSO_DATABASE_URL`, and
-   `TURSO_AUTH_TOKEN` as Production environment variables. Vercel auto-detects
-   Next.js — no other config needed.
+   set `APP_PASSWORD`, `SESSION_SECRET`, `TURSO_DATABASE_URL`,
+   `TURSO_AUTH_TOKEN`, and (optional) `ALPHA_VANTAGE_API_KEY` as Production
+   environment variables. Vercel auto-detects Next.js — no other config needed.
+
+Note: the S&P benchmark data comes from Alpha Vantage rather than a free
+scraping-style endpoint (like Stooq) specifically because those commonly block
+requests from cloud/datacenter IP ranges — Vercel's outbound IPs included —
+regardless of headers. A keyed API avoids that.
 
 ## Possible next steps
 
