@@ -52,7 +52,8 @@ export type FundSummary = {
   navPerUnit: number;
   totalCostBasis: number;
   totalProfit: number;
-  twr: number; // time-weighted return since inception
+  simpleReturn: number; // money-weighted: total profit / total invested (matches broker "all-time")
+  twr: number; // time-weighted return since inception (pure per-unit performance)
   asOf: string | null;
   clients: ClientSummary[];
   navSeries: NavPoint[];
@@ -266,10 +267,15 @@ function sortKey(date: string, createdAt: string): string {
  * Recomputed on every read (data volume is tiny) — nothing derived is stored,
  * so edits can never leave stale unit counts behind.
  */
+function compareTx(a: Transaction, b: Transaction): number {
+  // Chronological, then by creation time, then id — so same-day transactions
+  // (e.g. two deposits on the same date) always replay in a stable order.
+  const k = sortKey(a.date, a.createdAt).localeCompare(sortKey(b.date, b.createdAt));
+  return k !== 0 ? k : a.id - b.id;
+}
+
 function buildLedger(transactions: Transaction[], valuations: Valuation[]): Ledger {
-  const txs = [...transactions].sort((a, b) =>
-    sortKey(a.date, a.createdAt).localeCompare(sortKey(b.date, b.createdAt))
-  );
+  const txs = [...transactions].sort(compareTx);
 
   let totalUnits = 0;
   let lastNav = SEED_NAV;
@@ -391,6 +397,7 @@ export async function getFundSummary(): Promise<FundSummary> {
   });
 
   const totalCostBasis = transactions.reduce((s, t) => s + t.amount, 0);
+  const totalProfit = ledger.currentFundValue - totalCostBasis;
   const twr = ledger.navPerUnit / SEED_NAV - 1;
 
   return {
@@ -398,7 +405,8 @@ export async function getFundSummary(): Promise<FundSummary> {
     totalUnits: ledger.totalUnits,
     navPerUnit: ledger.navPerUnit,
     totalCostBasis,
-    totalProfit: ledger.currentFundValue - totalCostBasis,
+    totalProfit,
+    simpleReturn: totalCostBasis > 0 ? totalProfit / totalCostBasis : 0,
     twr,
     asOf: ledger.asOf,
     clients: clientSummaries,

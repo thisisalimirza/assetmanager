@@ -74,6 +74,12 @@ npm run seed
 
 It skips itself if any client already exists, so it's safe to run twice.
 
+To **rebuild** a database that already has data from the canonical dataset in
+`src/scripts/seed.ts` (e.g. after reconciling figures against the brokerage),
+use `npm run reconcile` — it wipes clients/transactions/valuations and re-seeds,
+then prints the resulting per-client split so you can confirm it ties out. Point
+it at production by exporting `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` first.
+
 ## Migrating from the original spreadsheet-era schema
 
 If the database still has the original v1 tables (`contributors` /

@@ -60,10 +60,10 @@ export default async function DashboardPage() {
           hint={`on ${formatCurrency(fund.totalCostBasis)} invested`}
         />
         <StatCard
-          label="Return (time-weighted)"
-          value={formatSignedPercent(fund.twr)}
-          tone={fund.twr >= 0 ? "positive" : "negative"}
-          hint="since inception"
+          label="Total return"
+          value={formatSignedPercent(fund.simpleReturn)}
+          tone={fund.simpleReturn >= 0 ? "positive" : "negative"}
+          hint={`${formatSignedPercent(fund.twr)} time-weighted`}
         />
         <StatCard label="NAV per unit" value={formatCurrency(fund.navPerUnit)} hint={`${fund.totalUnits.toFixed(2)} units`} />
       </div>
