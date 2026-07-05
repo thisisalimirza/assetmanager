@@ -26,11 +26,11 @@
  *   transactions (2024-12-06 $500, 2024-12-23 $200), and swapped Mom's other
  *   approximate self-reported dates for the exact real ACH dates now that
  *   we have them (amounts unchanged).
- * - Ali's 2025-09-14 ($2,624.49) and 2025-12-20 ($302.59) entries are left
- *   untouched — neither has any matching transaction in the export, but Ali
- *   is verifying them against other records before we decide whether to drop
- *   them. Once resolved, the ledger will tie out to the Robinhood export to
- *   the penny.
+ * - Dropped Ali's 2025-09-14 ($2,624.49) and 2025-12-20 ($302.59) entries —
+ *   neither had any matching transaction anywhere in the export, and Ali
+ *   confirmed nothing else backs them. With these gone, total invested is
+ *   $7,726.00, which matches the real ACH/wire cash-flow total from the
+ *   export to the penny.
  *
  * Pricing:
  * - Pre-spreadsheet deposits (through 2025-10-20) are priced flat (NAV 100) via
@@ -44,8 +44,7 @@
  *   interpolated (by day-count) between the nearest real marks before/after
  *   it — flagged INTERP. This is materially more accurate than a flat
  *   estimate, though still approximate; replace with a real mark if one is
- *   ever found. Only Ali's 2025-12-20 entry remains a flat placeholder — it's
- *   pending his own verification (see above), not a dating gap.
+ *   ever found.
  *
  * Safe to re-run: seed skips itself if any client already exists.
  * Usage: npm run seed   (fresh DB)   |   npm run reconcile   (rebuild existing DB)
@@ -80,19 +79,13 @@ const TRANSACTIONS: Tx[] = [
   { client: "Mom", date: "2025-08-28", amount: 700.0, avb: 3387 },
   { client: "Ali", date: "2025-09-04", amount: 50.0, avb: 4087, note: NEW },
   { client: "Ali", date: "2025-09-09", amount: 400.0, avb: 4137, note: NEW },
-  // Not in the Robinhood export at all — pending Ali's own verification
-  // against other records before deciding whether to drop it.
-  { client: "Ali", date: "2025-09-14", amount: 2624.49, avb: 4537, note: "UNVERIFIED — no matching Robinhood transaction found; pending Ali's review" },
-  { client: "Ali", date: "2025-09-15", amount: 300.0, avb: 7161.49, note: "Corrected from $265.00 — real ACH deposit that day was $300.00" },
-  { client: "Mom", date: "2025-09-17", amount: 250.0, avb: 7461.49 },
-  { client: "Ali", date: "2025-09-24", amount: 250.0, avb: 7711.49, note: NEW },
-  { client: "Ali", date: "2025-09-24", amount: 15.0, avb: 7961.49, note: NEW },
-  { client: "Mom", date: "2025-10-20", amount: 300.0, avb: 7976.49 },
+  { client: "Ali", date: "2025-09-15", amount: 300.0, avb: 4537, note: "Corrected from $265.00 — real ACH deposit that day was $300.00" },
+  { client: "Mom", date: "2025-09-17", amount: 250.0, avb: 4837 },
+  { client: "Ali", date: "2025-09-24", amount: 250.0, avb: 5087, note: NEW },
+  { client: "Ali", date: "2025-09-24", amount: 15.0, avb: 5337, note: NEW },
+  { client: "Mom", date: "2025-10-20", amount: 300.0, avb: 5352 },
   // Post-spreadsheet, priced at real Robinhood marks.
   { client: "Mom", date: "2025-12-19", amount: 500.0, avb: 8996.6 },
-  // Not in the Robinhood export at all — pending Ali's own verification, same
-  // as the 2025-09-14 entry above.
-  { client: "Ali", date: "2025-12-20", amount: 302.59, avb: 9496.6, note: "UNVERIFIED — no matching Robinhood transaction found; pending Ali's review" },
 
   // From here on, every Ali entry is a real dated amount from the Robinhood
   // activity export, replacing the old flat reconciliation placeholders.
