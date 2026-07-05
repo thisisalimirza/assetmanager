@@ -1,11 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/auth";
 
-export async function middleware(req: NextRequest) {
+// Auth gate for the whole app (Next's `proxy` convention, formerly
+// `middleware`). NOTE: this file must live in src/ — at the same level as
+// `app` — or Next silently ignores it.
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // The login page must be reachable without a session.
-  if (pathname === "/login") {
+  // The login page must be reachable without a session. Share pages are
+  // read-only views gated by their own secret capability token (checked in the
+  // page against the database), not by the advisor's session.
+  if (pathname === "/login" || pathname.startsWith("/share/")) {
     return NextResponse.next();
   }
 

@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { getFundSummary, listClients } from "@/lib/portfolio";
+import { getFundSummary, getFundShareToken, listClients } from "@/lib/portfolio";
 import { getAlpha } from "@/lib/analytics";
+import { ShareLinkCard } from "@/app/components/ShareLinkCard";
+import { createFundShareLink, revokeFundShareLink } from "@/app/actions";
 import {
   formatCurrency,
   formatSignedCurrency,
@@ -24,7 +26,12 @@ function daysAgo(dateIso: string): number {
 }
 
 export default async function DashboardPage() {
-  const [fund, clients, alpha] = await Promise.all([getFundSummary(), listClients(), getAlpha()]);
+  const [fund, clients, alpha, fundShareToken] = await Promise.all([
+    getFundSummary(),
+    listClients(),
+    getAlpha(),
+    getFundShareToken(),
+  ]);
   const chartPoints = fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }));
   const rankedClients = [...fund.clients].sort((a, b) => b.currentValue - a.currentValue);
   const staleDays = fund.asOf ? daysAgo(fund.asOf) : null;
@@ -204,6 +211,14 @@ export default async function DashboardPage() {
           </table>
         </div>
       </div>
+
+      <ShareLinkCard
+        title="Public track record link"
+        description="A read-only page for prospective investors: time-weighted performance vs the S&P only — no dollar amounts, no client names, no AUM."
+        path={fundShareToken ? `/share/f/${fundShareToken}` : null}
+        createAction={createFundShareLink}
+        revokeAction={revokeFundShareLink}
+      />
     </div>
   );
 }

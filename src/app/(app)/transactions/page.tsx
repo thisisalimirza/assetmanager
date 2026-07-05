@@ -18,7 +18,13 @@ export default async function TransactionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
-          <p className="mt-1 text-sm text-zinc-500">All deposits and withdrawals across clients.</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            All deposits and withdrawals across clients. Every change is kept in the{" "}
+            <Link href="/audit" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
+              audit trail
+            </Link>
+            .
+          </p>
         </div>
         {clients.length > 0 && (
           <TransactionModal label="+ Record transaction" clients={clients} latestValue={fund.aum} />
@@ -47,6 +53,9 @@ export default async function TransactionsPage() {
                 <th className="px-4 py-2.5 font-medium">Type</th>
                 <th className="px-4 py-2.5 text-right font-medium">Amount</th>
                 <th className="px-4 py-2.5 text-right font-medium">Value before</th>
+                <th className="px-4 py-2.5 text-center font-medium" title="Matched against a real bank/Venmo movement on the Reconcile page">
+                  Rec.
+                </th>
                 <th className="px-4 py-2.5 text-right font-medium"></th>
               </tr>
             </thead>
@@ -70,6 +79,18 @@ export default async function TransactionsPage() {
                   </td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-zinc-500">
                     {t.accountValueBefore != null ? formatCurrency(t.accountValueBefore) : "—"}
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    {t.reconciledAt ? (
+                      <span
+                        className="text-emerald-600 dark:text-emerald-400"
+                        title={`Reconciled ${formatDate(t.reconciledAt)}`}
+                      >
+                        ✓
+                      </span>
+                    ) : (
+                      <span className="text-zinc-300 dark:text-zinc-700">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     <TransactionModal
