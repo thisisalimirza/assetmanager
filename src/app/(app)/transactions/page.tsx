@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getFundSummary, listClients, listTransactions } from "@/lib/portfolio";
 import { formatCurrency, formatSignedCurrency, formatDate } from "@/lib/format";
 import { TransactionModal } from "@/app/components/TransactionModal";
+import { PageHeader } from "@/app/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -15,21 +16,23 @@ export default async function TransactionsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Transactions</h1>
-          <p className="mt-1 text-sm text-zinc-500">
+      <PageHeader
+        title="Transactions"
+        subtitle={
+          <>
             All deposits and withdrawals across clients. Every change is kept in the{" "}
             <Link href="/audit" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
               audit trail
             </Link>
             .
-          </p>
-        </div>
-        {clients.length > 0 && (
-          <TransactionModal label="+ Record transaction" clients={clients} latestValue={fund.aum} />
-        )}
-      </div>
+          </>
+        }
+        actions={
+          clients.length > 0 && (
+            <TransactionModal label="+ Record transaction" clients={clients} latestValue={fund.aum} />
+          )
+        }
+      />
 
       {clients.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">

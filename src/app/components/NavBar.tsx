@@ -45,6 +45,17 @@ export function NavBar() {
             );
           })}
         </div>
+        <Link
+          href="/settings"
+          className={
+            "shrink-0 rounded-md px-3 py-1.5 text-sm " +
+            (isActive(pathname, "/settings")
+              ? "bg-zinc-200 font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+              : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-900 dark:hover:text-zinc-100")
+          }
+        >
+          Settings
+        </Link>
         <form action={logout} className="shrink-0">
           <button
             type="submit"

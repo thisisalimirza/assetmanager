@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, type ReactNode } from "react";
+import { buttonStyles } from "./ui";
 
 const ModalContext = createContext<() => void>(() => {});
 
@@ -12,14 +13,7 @@ type ModalProps = {
   className?: string;
 };
 
-const triggerStyles: Record<string, string> = {
-  primary:
-    "inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white",
-  secondary:
-    "inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800",
-  ghost:
-    "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
-};
+const triggerStyles: Record<string, string> = buttonStyles;
 
 export function Modal({ label, title, children, variant = "primary", className }: ModalProps) {
   const [open, setOpen] = useState(false);

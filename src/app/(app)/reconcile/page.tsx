@@ -1,5 +1,6 @@
 import { listClients, listTransactions } from "@/lib/portfolio";
 import { ReconcileTool } from "@/app/components/ReconcileTool";
+import { PageHeader } from "@/app/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -10,15 +11,15 @@ export default async function ReconcilePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Reconcile</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Check recorded deposits and withdrawals against actual money movement (Venmo, bank, or
-          brokerage exports) and flag mismatches.
-          {txns.length > 0 &&
-            ` ${txns.length - unreconciled} of ${txns.length} transactions reconciled so far.`}
-        </p>
-      </div>
+      <PageHeader
+        title="Reconcile"
+        subtitle={
+          "Check recorded deposits and withdrawals against actual money movement (Venmo, bank, or brokerage exports) and flag mismatches." +
+          (txns.length > 0
+            ? ` ${txns.length - unreconciled} of ${txns.length} transactions reconciled so far.`
+            : "")
+        }
+      />
 
       <ReconcileTool
         transactions={txns.map((t) => ({
