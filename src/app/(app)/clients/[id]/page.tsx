@@ -18,6 +18,8 @@ import { StatCard } from "@/app/components/StatCard";
 import { ClientModal } from "@/app/components/ClientModal";
 import { TransactionModal } from "@/app/components/TransactionModal";
 import { ComparisonChart } from "@/app/components/ComparisonChart";
+import { ShareLinkCard } from "@/app/components/ShareLinkCard";
+import { createClientShareLink, revokeClientShareLink } from "@/app/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -61,6 +63,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           >
             View statement
           </Link>
+          <a
+            href={`/api/export/client/${id}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          >
+            Export CSV
+          </a>
           <TransactionModal
             label="+ Record transaction"
             clients={clients}
@@ -84,6 +92,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           tone={s.returnPct >= 0 ? "positive" : "negative"}
         />
       </div>
+
+      <ShareLinkCard
+        title={`${client.name}'s private link`}
+        description="A read-only page with their balance, returns, and printable statement — no password needed. Send it to them directly."
+        path={client.shareToken ? `/share/c/${client.shareToken}` : null}
+        clientId={client.id}
+        createAction={createClientShareLink}
+        revokeAction={revokeClientShareLink}
+      />
 
       <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">

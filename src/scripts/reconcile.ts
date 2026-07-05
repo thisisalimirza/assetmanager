@@ -8,11 +8,31 @@
  *   TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... npm run reconcile
  */
 import { getFundSummary } from "../lib/portfolio";
+import { getDb } from "../lib/db";
 import { seedData, wipeAll } from "./seed";
 
 async function main() {
+  const db = await getDb();
+
+  // Share links are live credentials clients already have — snapshot them by
+  // name before the wipe and restore them after reseeding, so a rebuild
+  // doesn't silently kill everyone's links.
+  const savedTokens = (
+    await db.execute("SELECT name, share_token FROM clients WHERE share_token IS NOT NULL")
+  ).rows.map((r) => ({ name: String(r.name), token: String(r.share_token) }));
+
   await wipeAll();
   await seedData();
+
+  for (const { name, token } of savedTokens) {
+    await db.execute({
+      sql: "UPDATE clients SET share_token = ? WHERE name = ?",
+      args: [token, name],
+    });
+  }
+  if (savedTokens.length > 0) {
+    console.log(`Restored share links for: ${savedTokens.map((t) => t.name).join(", ")}`);
+  }
 
   const fund = await getFundSummary();
   const money = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

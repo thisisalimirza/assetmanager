@@ -42,6 +42,18 @@ export async function createSessionToken(): Promise<string> {
   return `${SESSION_PAYLOAD}.${sig}`;
 }
 
+/**
+ * Random capability token for read-only share links (client statements, fund
+ * performance). 128 bits of entropy, URL-safe. Knowing the URL is the only
+ * credential, so links are revocable by clearing/rotating the stored token.
+ */
+export function generateShareToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export async function verifySessionToken(token: string | undefined): Promise<boolean> {
   if (!token) return false;
   const dot = token.lastIndexOf(".");

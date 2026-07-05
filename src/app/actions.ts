@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import * as portfolio from "@/lib/portfolio";
-import { checkPassword, createSessionToken, SESSION_COOKIE } from "@/lib/auth";
+import { checkPassword, createSessionToken, generateShareToken, SESSION_COOKIE } from "@/lib/auth";
 
 // --- form helpers ---
 
@@ -192,4 +192,42 @@ export async function editValuation(_prev: FormState, formData: FormData): Promi
 export async function removeValuation(formData: FormData) {
   await portfolio.deleteValuation(requireNumber(formData, "id"));
   revalidateAll();
+}
+
+// --- share links ---
+// Creating and regenerating both mint a fresh token; regenerating or revoking
+// kills the old URL immediately (the token is the only credential).
+
+export async function createClientShareLink(formData: FormData) {
+  const id = requireNumber(formData, "id");
+  await portfolio.setClientShareToken(id, generateShareToken());
+  revalidateAll(id);
+}
+
+export async function revokeClientShareLink(formData: FormData) {
+  const id = requireNumber(formData, "id");
+  await portfolio.setClientShareToken(id, null);
+  revalidateAll(id);
+}
+
+export async function createFundShareLink() {
+  await portfolio.setFundShareToken(generateShareToken());
+  revalidatePath("/");
+}
+
+export async function revokeFundShareLink() {
+  await portfolio.setFundShareToken(null);
+  revalidatePath("/");
+}
+
+// --- reconciliation ---
+
+export async function reconcileTransactions(formData: FormData) {
+  const ids = String(formData.get("ids") ?? "")
+    .split(",")
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  await portfolio.markTransactionsReconciled(ids);
+  revalidateAll();
+  revalidatePath("/reconcile");
 }

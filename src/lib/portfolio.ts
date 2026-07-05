@@ -11,6 +11,7 @@ export type Client = {
   email: string | null;
   phone: string | null;
   notes: string | null;
+  shareToken: string | null; // secret capability token for the client's read-only link
 };
 
 export type Transaction = {
@@ -20,6 +21,7 @@ export type Transaction = {
   amount: number; // signed: positive = deposit, negative = withdrawal
   accountValueBefore: number | null; // total fund value immediately before this tx
   note: string | null;
+  reconciledAt: string | null; // when this was matched against a real bank/Venmo movement
   createdAt: string;
 };
 
@@ -61,33 +63,49 @@ export type FundSummary = {
 
 // --- Clients ---
 
-export async function listClients(): Promise<Client[]> {
-  const db = await getDb();
-  const res = await db.execute("SELECT id, name, email, phone, notes FROM clients ORDER BY name");
-  return res.rows.map((r) => ({
-    id: Number(r.id),
-    name: String(r.name),
-    email: r.email == null ? null : String(r.email),
-    phone: r.phone == null ? null : String(r.phone),
-    notes: r.notes == null ? null : String(r.notes),
-  }));
-}
-
-export async function getClient(id: number): Promise<Client | null> {
-  const db = await getDb();
-  const res = await db.execute({
-    sql: "SELECT id, name, email, phone, notes FROM clients WHERE id = ?",
-    args: [id],
-  });
-  const r = res.rows[0];
-  if (!r) return null;
+function mapClient(r: Record<string, unknown>): Client {
   return {
     id: Number(r.id),
     name: String(r.name),
     email: r.email == null ? null : String(r.email),
     phone: r.phone == null ? null : String(r.phone),
     notes: r.notes == null ? null : String(r.notes),
+    shareToken: r.share_token == null ? null : String(r.share_token),
   };
+}
+
+export async function listClients(): Promise<Client[]> {
+  const db = await getDb();
+  const res = await db.execute(
+    "SELECT id, name, email, phone, notes, share_token FROM clients ORDER BY name"
+  );
+  return res.rows.map(mapClient);
+}
+
+export async function getClient(id: number): Promise<Client | null> {
+  const db = await getDb();
+  const res = await db.execute({
+    sql: "SELECT id, name, email, phone, notes, share_token FROM clients WHERE id = ?",
+    args: [id],
+  });
+  const r = res.rows[0];
+  return r ? mapClient(r) : null;
+}
+
+export async function getClientByShareToken(token: string): Promise<Client | null> {
+  if (!token) return null;
+  const db = await getDb();
+  const res = await db.execute({
+    sql: "SELECT id, name, email, phone, notes, share_token FROM clients WHERE share_token = ?",
+    args: [token],
+  });
+  const r = res.rows[0];
+  return r ? mapClient(r) : null;
+}
+
+export async function setClientShareToken(id: number, token: string | null): Promise<void> {
+  const db = await getDb();
+  await db.execute({ sql: "UPDATE clients SET share_token = ? WHERE id = ?", args: [token, id] });
 }
 
 export async function addClient(fields: {
@@ -121,10 +139,13 @@ export async function deleteClient(id: number): Promise<void> {
 
 // --- Transactions ---
 
+const TX_COLUMNS =
+  "id, client_id, date, amount, account_value_before, note, reconciled_at, created_at";
+
 export async function listTransactions(): Promise<Transaction[]> {
   const db = await getDb();
   const res = await db.execute(
-    "SELECT id, client_id, date, amount, account_value_before, note, created_at FROM transactions ORDER BY date DESC, id DESC"
+    `SELECT ${TX_COLUMNS} FROM transactions ORDER BY date DESC, id DESC`
   );
   return res.rows.map(mapTransaction);
 }
@@ -132,10 +153,20 @@ export async function listTransactions(): Promise<Transaction[]> {
 export async function listTransactionsForClient(clientId: number): Promise<Transaction[]> {
   const db = await getDb();
   const res = await db.execute({
-    sql: "SELECT id, client_id, date, amount, account_value_before, note, created_at FROM transactions WHERE client_id = ? ORDER BY date DESC, id DESC",
+    sql: `SELECT ${TX_COLUMNS} FROM transactions WHERE client_id = ? ORDER BY date DESC, id DESC`,
     args: [clientId],
   });
   return res.rows.map(mapTransaction);
+}
+
+async function getTransaction(id: number): Promise<Transaction | null> {
+  const db = await getDb();
+  const res = await db.execute({
+    sql: `SELECT ${TX_COLUMNS} FROM transactions WHERE id = ?`,
+    args: [id],
+  });
+  const r = res.rows[0];
+  return r ? mapTransaction(r) : null;
 }
 
 function mapTransaction(r: Record<string, unknown>): Transaction {
@@ -146,6 +177,7 @@ function mapTransaction(r: Record<string, unknown>): Transaction {
     amount: Number(r.amount),
     accountValueBefore: r.account_value_before == null ? null : Number(r.account_value_before),
     note: r.note == null ? null : String(r.note),
+    reconciledAt: r.reconciled_at == null ? null : String(r.reconciled_at),
     createdAt: String(r.created_at),
   };
 }
@@ -158,7 +190,7 @@ export async function addTransaction(fields: {
   note?: string;
 }): Promise<void> {
   const db = await getDb();
-  await db.execute({
+  const res = await db.execute({
     sql: "INSERT INTO transactions (client_id, date, amount, account_value_before, note) VALUES (?, ?, ?, ?, ?)",
     args: [
       fields.clientId,
@@ -168,6 +200,7 @@ export async function addTransaction(fields: {
       fields.note ?? null,
     ],
   });
+  await logAudit("transaction", Number(res.lastInsertRowid), "create", { after: fields });
 }
 
 export async function updateTransaction(
@@ -180,6 +213,7 @@ export async function updateTransaction(
     note?: string;
   }
 ): Promise<void> {
+  const before = await getTransaction(id);
   const db = await getDb();
   await db.execute({
     sql: "UPDATE transactions SET client_id = ?, date = ?, amount = ?, account_value_before = ?, note = ? WHERE id = ?",
@@ -192,11 +226,26 @@ export async function updateTransaction(
       id,
     ],
   });
+  await logAudit("transaction", id, "update", { before, after: fields });
 }
 
 export async function deleteTransaction(id: number): Promise<void> {
+  const before = await getTransaction(id);
   const db = await getDb();
   await db.execute({ sql: "DELETE FROM transactions WHERE id = ?", args: [id] });
+  await logAudit("transaction", id, "delete", { before });
+}
+
+/** Stamp transactions as matched against a real bank/Venmo movement. */
+export async function markTransactionsReconciled(ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  for (const id of ids) {
+    await db.execute({
+      sql: "UPDATE transactions SET reconciled_at = datetime('now') WHERE id = ? AND reconciled_at IS NULL",
+      args: [id],
+    });
+  }
 }
 
 // --- Valuations ---
@@ -219,11 +268,24 @@ function mapValuation(r: Record<string, unknown>): Valuation {
   };
 }
 
+async function getValuation(id: number): Promise<Valuation | null> {
+  const db = await getDb();
+  const res = await db.execute({
+    sql: "SELECT id, date, total_value, note, created_at FROM valuations WHERE id = ?",
+    args: [id],
+  });
+  const r = res.rows[0];
+  return r ? mapValuation(r) : null;
+}
+
 export async function addValuation(date: string, totalValue: number, note?: string): Promise<void> {
   const db = await getDb();
-  await db.execute({
+  const res = await db.execute({
     sql: "INSERT INTO valuations (date, total_value, note) VALUES (?, ?, ?)",
     args: [date, totalValue, note ?? null],
+  });
+  await logAudit("valuation", Number(res.lastInsertRowid), "create", {
+    after: { date, totalValue, note },
   });
 }
 
@@ -231,16 +293,94 @@ export async function updateValuation(
   id: number,
   fields: { date: string; totalValue: number; note?: string }
 ): Promise<void> {
+  const before = await getValuation(id);
   const db = await getDb();
   await db.execute({
     sql: "UPDATE valuations SET date = ?, total_value = ?, note = ? WHERE id = ?",
     args: [fields.date, fields.totalValue, fields.note ?? null, id],
   });
+  await logAudit("valuation", id, "update", { before, after: fields });
 }
 
 export async function deleteValuation(id: number): Promise<void> {
+  const before = await getValuation(id);
   const db = await getDb();
   await db.execute({ sql: "DELETE FROM valuations WHERE id = ?", args: [id] });
+  await logAudit("valuation", id, "delete", { before });
+}
+
+// --- Audit trail ---
+// The transactions/valuations tables stay editable (mistakes happen), but every
+// create/update/delete is also recorded in an append-only audit_log with a
+// before/after snapshot — so there's always a paper trail to reconstruct why a
+// balance is what it is, even after in-place corrections.
+
+export type AuditEntry = {
+  id: number;
+  entity: string; // 'transaction' | 'valuation'
+  entityId: number | null;
+  action: string; // 'create' | 'update' | 'delete'
+  detail: Record<string, unknown>; // { before?, after? } snapshots
+  createdAt: string;
+};
+
+async function logAudit(
+  entity: string,
+  entityId: number | null,
+  action: "create" | "update" | "delete",
+  detail: unknown
+): Promise<void> {
+  const db = await getDb();
+  await db.execute({
+    sql: "INSERT INTO audit_log (entity, entity_id, action, detail) VALUES (?, ?, ?, ?)",
+    args: [entity, entityId, action, JSON.stringify(detail)],
+  });
+}
+
+export async function listAuditLog(limit = 200): Promise<AuditEntry[]> {
+  const db = await getDb();
+  const res = await db.execute({
+    sql: "SELECT id, entity, entity_id, action, detail, created_at FROM audit_log ORDER BY id DESC LIMIT ?",
+    args: [limit],
+  });
+  return res.rows.map((r) => {
+    let detail: Record<string, unknown> = {};
+    try {
+      detail = JSON.parse(String(r.detail));
+    } catch {
+      // leave empty — a malformed row shouldn't break the whole page
+    }
+    return {
+      id: Number(r.id),
+      entity: String(r.entity),
+      entityId: r.entity_id == null ? null : Number(r.entity_id),
+      action: String(r.action),
+      detail,
+      createdAt: String(r.created_at),
+    };
+  });
+}
+
+// --- Settings / fund share link ---
+
+const FUND_SHARE_TOKEN_KEY = "fund_share_token";
+
+export async function getFundShareToken(): Promise<string | null> {
+  const db = await getDb();
+  const res = await db.execute({
+    sql: "SELECT value FROM settings WHERE key = ?",
+    args: [FUND_SHARE_TOKEN_KEY],
+  });
+  const v = res.rows[0]?.value;
+  return v == null ? null : String(v);
+}
+
+export async function setFundShareToken(token: string | null): Promise<void> {
+  const db = await getDb();
+  await db.execute({
+    sql: "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    args: [FUND_SHARE_TOKEN_KEY, token],
+  });
 }
 
 // --- Fund accounting (unit ledger) ---

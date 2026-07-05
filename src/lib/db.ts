@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS clients (
   email TEXT,
   phone TEXT,
   notes TEXT,
+  share_token TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -17,6 +18,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   amount REAL NOT NULL,
   account_value_before REAL,
   note TEXT,
+  reconciled_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -33,6 +35,20 @@ CREATE TABLE IF NOT EXISTS benchmark_prices (
   date TEXT NOT NULL,
   close REAL NOT NULL,
   PRIMARY KEY (symbol, date)
+);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  entity TEXT NOT NULL,
+  entity_id INTEGER,
+  action TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_transactions_client ON transactions(client_id);
@@ -132,8 +148,31 @@ async function migrateLegacyData(client: Client): Promise<void> {
   }
 }
 
+async function columnExists(client: Client, table: string, column: string): Promise<boolean> {
+  const res = await client.execute({
+    sql: "SELECT name FROM pragma_table_info(?) WHERE name = ?",
+    args: [table, column],
+  });
+  return res.rows.length > 0;
+}
+
+// Columns added after v2 shipped — CREATE TABLE IF NOT EXISTS won't add them to
+// existing databases, so they need conditional ALTERs.
+async function migrateNewColumns(client: Client): Promise<void> {
+  if (!(await columnExists(client, "clients", "share_token"))) {
+    await client.execute("ALTER TABLE clients ADD COLUMN share_token TEXT");
+  }
+  if (!(await columnExists(client, "transactions", "reconciled_at"))) {
+    await client.execute("ALTER TABLE transactions ADD COLUMN reconciled_at TEXT");
+  }
+  await client.execute(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_clients_share_token ON clients(share_token)"
+  );
+}
+
 async function migrate(client: Client): Promise<void> {
   await client.executeMultiple(SCHEMA);
+  await migrateNewColumns(client);
   await migrateLegacyData(client);
 }
 

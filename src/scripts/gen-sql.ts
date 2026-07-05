@@ -32,6 +32,13 @@ async function main() {
 
   const lines: string[] = [];
   lines.push("-- Reconcile: wipe and rebuild from the corrected dataset.");
+  lines.push("-- Client share links are preserved by name across the rebuild (a real");
+  lines.push("-- table, not TEMP, in case the console runs statements on separate connections).");
+  lines.push("CREATE TABLE IF NOT EXISTS _preserve_share_tokens (name TEXT, share_token TEXT);");
+  lines.push("DELETE FROM _preserve_share_tokens;");
+  lines.push(
+    "INSERT INTO _preserve_share_tokens SELECT name, share_token FROM clients WHERE share_token IS NOT NULL;"
+  );
   lines.push("DELETE FROM transactions;");
   lines.push("DELETE FROM valuations;");
   lines.push("DELETE FROM clients;");
@@ -64,6 +71,11 @@ async function main() {
       )
       .join(",\n") + ";"
   );
+  lines.push("");
+  lines.push(
+    "UPDATE clients SET share_token = (SELECT share_token FROM _preserve_share_tokens p WHERE p.name = clients.name);"
+  );
+  lines.push("DROP TABLE _preserve_share_tokens;");
 
   console.log(lines.join("\n"));
 }

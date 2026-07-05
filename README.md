@@ -33,6 +33,43 @@ derived is stored), and is covered by a scenario test:
 npm run verify
 ```
 
+## Read-only sharing (clients & prospects)
+
+The app itself stays behind the single advisor password, but two kinds of
+**secret share links** give outsiders a read-only view. The URL is the
+credential (a random 128-bit token checked against the database) — no accounts
+or passwords for viewers, and every link can be revoked or regenerated
+instantly, which kills the old URL:
+
+- **Client link** (`/share/c/<token>`, managed from that client's page): the
+  client's private portal — their balance, net invested, profit, return, a
+  chart of their actual dollars vs. the same cash flows in the S&P 500, and
+  the printable statement (all-time or by period). It shows _only their own
+  money_ — no other clients, no fund totals.
+- **Fund link** (`/share/f/<token>`, managed from the dashboard): for
+  prospective investors — the fund's time-weighted track record vs. the
+  S&P 500 and a hypothetical growth-of-$10,000 figure. Deliberately contains
+  **no dollar amounts, client names, or AUM**.
+
+Share pages are excluded from search indexing and never expose edit actions.
+`npm run reconcile` and `npm run gen-sql` preserve client share links (by
+client name) across a database rebuild.
+
+## Audit trail & reconciliation
+
+- **Audit trail** (`/audit`): every create/update/delete of a transaction or
+  valuation is also written to an append-only `audit_log` table with a full
+  before/after JSON snapshot. The working tables stay editable (mistakes
+  happen), but there is always a paper trail to reconstruct any balance.
+- **Reconcile** (`/reconcile`): paste a Venmo/bank/brokerage CSV export and it
+  matches each movement to a recorded transaction (same amount, within a few
+  days), then flags movements that were never recorded and recorded
+  transactions with no matching movement. Matches can be stamped as
+  reconciled, shown as a ✓ on the transactions page.
+- **Cost-basis export**: each client page has an "Export CSV" button — every
+  dated cash flow with running net invested, plus current value and return —
+  for taxes or anyone asking "how much did I actually put in?".
+
 ## Stack
 
 - **Next.js (App Router)** — server-rendered pages + server actions. No separate
@@ -44,7 +81,9 @@ npm run verify
   `@libsql/client` talks to a file on disk, so no external service is needed for
   development.
 - **Auth** — a single shared password (see env vars below) protects the whole
-  app via middleware; there's no multi-user system.
+  app via middleware; there's no multi-user system. The only exception is
+  `/share/*`: read-only pages gated by their own secret per-link tokens (see
+  "Read-only sharing" above).
 
 ## Environment variables
 
