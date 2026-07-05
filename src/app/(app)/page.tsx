@@ -26,6 +26,7 @@ function daysAgo(dateIso: string): number {
 export default async function DashboardPage() {
   const [fund, clients, alpha] = await Promise.all([getFundSummary(), listClients(), getAlpha()]);
   const chartPoints = fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }));
+  const inception = fund.navSeries[0]?.date ?? null;
   const rankedClients = [...fund.clients].sort((a, b) => b.currentValue - a.currentValue);
   const staleDays = fund.asOf ? daysAgo(fund.asOf) : null;
   const isStale = staleDays != null && staleDays > STALE_DAYS;
@@ -82,10 +83,10 @@ export default async function DashboardPage() {
           hint={`on ${formatCurrency(fund.totalCostBasis)} invested`}
         />
         <StatCard
-          label="Fund performance"
+          label="Performance since inception"
           value={formatSignedPercent(fund.twr)}
           tone={fund.twr >= 0 ? "positive" : "negative"}
-          hint={`${formatSignedPercent(fund.simpleReturn)} money-weighted`}
+          hint={`${inception ? `from ${formatDate(inception)} · ` : ""}${formatSignedPercent(fund.simpleReturn)} money-weighted`}
         />
         <StatCard label="NAV per unit" value={formatCurrency(fund.navPerUnit)} hint={`${fund.totalUnits.toFixed(2)} units`} />
       </div>

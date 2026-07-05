@@ -97,7 +97,7 @@ export default async function FundSharePage({ params }: { params: Promise<{ toke
               label="Fund performance"
               value={formatSignedPercent(alpha.fundReturn)}
               tone={alpha.fundReturn >= 0 ? "positive" : "negative"}
-              hint={`since ${formatDate(alpha.anchorDate)}`}
+              hint={`since first audited valuation — ${formatDate(alpha.anchorDate)}`}
             />
             <StatCard
               label={alpha.label}
@@ -120,7 +120,9 @@ export default async function FundSharePage({ params }: { params: Promise<{ toke
           <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-sm font-medium text-zinc-500">Performance vs {alpha.label}</h2>
-              <span className="text-xs text-zinc-400">since {formatDate(alpha.anchorDate)}</span>
+              <span className="text-xs text-zinc-400">
+                since first audited valuation — {formatDate(alpha.anchorDate)}
+              </span>
             </div>
             <ComparisonChart series={alpha.series} benchmarkLabel={alpha.label} primaryLabel="This fund" />
             <p className="mt-2 text-xs text-zinc-400">
@@ -158,9 +160,17 @@ export default async function FundSharePage({ params }: { params: Promise<{ toke
       <div className="rounded-xl bg-zinc-100 p-4 text-xs leading-relaxed text-zinc-500 dark:bg-zinc-900">
         <p className="mb-1 font-medium text-zinc-600 dark:text-zinc-400">How this is calculated</p>
         The fund uses unit (NAV) accounting, like a mutual fund: performance is time-weighted, so
-        it reflects pure investment results regardless of when money moved in or out. The
-        $10,000 figure is a hypothetical illustration over the same period, not an actual account.
-        Past performance does not guarantee future results.
+        it reflects pure investment results regardless of when money moved in or out.
+        {alpha.available && (
+          <>
+            {" "}
+            Performance is measured from the fund&apos;s first audited valuation (
+            {formatDate(alpha.anchorDate)}); earlier history lacks verifiable market marks and is
+            excluded rather than estimated.
+          </>
+        )}{" "}
+        The $10,000 figure is a hypothetical illustration over the same period, not an actual
+        account. Past performance does not guarantee future results.
       </div>
     </div>
   );
