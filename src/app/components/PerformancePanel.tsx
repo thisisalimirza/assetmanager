@@ -42,7 +42,9 @@ export function PerformancePanel({
           </button>
         </div>
         {tab === "benchmark" && alpha.available && (
-          <span className="text-xs text-zinc-400">since {formatDate(alpha.anchorDate)}</span>
+          <span className="text-xs text-zinc-400">
+            since first audited valuation — {formatDate(alpha.anchorDate)}
+          </span>
         )}
       </div>
 
@@ -66,9 +68,10 @@ export function PerformancePanel({
           </div>
           <ComparisonChart series={alpha.series} benchmarkLabel={alpha.label} />
           <p className="mt-2 text-xs text-zinc-400">
-            Time-weighted return vs the {alpha.label} over the same period — pure investment
-            performance, unaffected by deposit timing. Alpha is how much you beat (or trailed)
-            simply holding the index.
+            Time-weighted return vs the {alpha.label}, measured from the first audited valuation
+            ({formatDate(alpha.anchorDate)}) — earlier history has no market marks to compare
+            against, which is why this differs from the since-inception figure above. Alpha is how
+            much you beat (or trailed) simply holding the index.
           </p>
         </>
       ) : (
