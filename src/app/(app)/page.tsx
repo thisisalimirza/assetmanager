@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { getFundSummary, getFundShareToken, listClients } from "@/lib/portfolio";
+import { getFundSummary, listClients } from "@/lib/portfolio";
 import { getAlpha } from "@/lib/analytics";
-import { ShareLinkCard } from "@/app/components/ShareLinkCard";
-import { createFundShareLink, revokeFundShareLink } from "@/app/actions";
 import {
   formatCurrency,
   formatSignedCurrency,
@@ -11,8 +9,8 @@ import {
   formatDate,
 } from "@/lib/format";
 import { StatCard } from "@/app/components/StatCard";
-import { ValueChart } from "@/app/components/ValueChart";
-import { ComparisonChart } from "@/app/components/ComparisonChart";
+import { PerformancePanel } from "@/app/components/PerformancePanel";
+import { PageHeader, SectionHeader } from "@/app/components/PageHeader";
 import { TransactionModal } from "@/app/components/TransactionModal";
 import { ValuationModal } from "@/app/components/ValuationModal";
 import { ClientModal } from "@/app/components/ClientModal";
@@ -26,12 +24,7 @@ function daysAgo(dateIso: string): number {
 }
 
 export default async function DashboardPage() {
-  const [fund, clients, alpha, fundShareToken] = await Promise.all([
-    getFundSummary(),
-    listClients(),
-    getAlpha(),
-    getFundShareToken(),
-  ]);
+  const [fund, clients, alpha] = await Promise.all([getFundSummary(), listClients(), getAlpha()]);
   const chartPoints = fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }));
   const rankedClients = [...fund.clients].sort((a, b) => b.currentValue - a.currentValue);
   const staleDays = fund.asOf ? daysAgo(fund.asOf) : null;
@@ -40,7 +33,7 @@ export default async function DashboardPage() {
   if (clients.length === 0) {
     return (
       <div className="flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <PageHeader title="Dashboard" />
         <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center dark:border-zinc-700">
           <p className="text-sm text-zinc-500">
             Add your first client to start tracking the fund.
@@ -55,20 +48,20 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-500">
-            {fund.asOf
-              ? `As of ${formatDate(fund.asOf)}${staleDays != null ? ` · ${staleDays === 0 ? "today" : `${staleDays}d ago`}` : ""}`
-              : "No valuation recorded yet"}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <ValuationModal label="Add valuation" variant="secondary" latestValue={fund.aum} />
-          <TransactionModal label="+ Record transaction" clients={clients} latestValue={fund.aum} />
-        </div>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        subtitle={
+          fund.asOf
+            ? `As of ${formatDate(fund.asOf)}${staleDays != null ? ` · ${staleDays === 0 ? "today" : `${staleDays}d ago`}` : ""}`
+            : "No valuation recorded yet"
+        }
+        actions={
+          <>
+            <ValuationModal label="Add valuation" variant="secondary" latestValue={fund.aum} />
+            <TransactionModal label="+ Record transaction" clients={clients} latestValue={fund.aum} />
+          </>
+        }
+      />
 
       {isStale && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300">
@@ -96,76 +89,22 @@ export default async function DashboardPage() {
         />
         <StatCard label="NAV per unit" value={formatCurrency(fund.navPerUnit)} hint={`${fund.totalUnits.toFixed(2)} units`} />
       </div>
-      <p className="-mt-4 text-xs text-zinc-400">
-        Fund performance is time-weighted (pure investment return, unaffected by deposit timing —
-        this is what&apos;s compared to the S&amp;P below). Money-weighted return is how much your
-        actual dollars grew, which can look better or worse depending on when money came in.
-      </p>
 
-      <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="mb-3 text-sm font-medium text-zinc-500">Fund value over time</h2>
-        <ValueChart points={chartPoints} emptyHint="Record valuations over time to see the trend." />
-      </div>
-
-      <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-sm font-medium text-zinc-500">Performance vs {alpha.label}</h2>
-          {alpha.available && (
-            <span className="text-xs text-zinc-400">since {formatDate(alpha.anchorDate)}</span>
-          )}
-        </div>
-        {alpha.available ? (
-          <>
-            <div className="mb-4 grid grid-cols-3 gap-4">
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Fund performance</div>
-                <div
-                  className={
-                    "mt-0.5 text-xl font-semibold tabular-nums " +
-                    (alpha.fundReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")
-                  }
-                >
-                  {formatSignedPercent(alpha.fundReturn)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">{alpha.label}</div>
-                <div className="mt-0.5 text-xl font-semibold tabular-nums text-zinc-500">
-                  {formatSignedPercent(alpha.benchmarkReturn)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-zinc-500">Alpha</div>
-                <div
-                  className={
-                    "mt-0.5 text-xl font-semibold tabular-nums " +
-                    (alpha.alpha >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")
-                  }
-                >
-                  {formatSignedPercent(alpha.alpha)}
-                </div>
-              </div>
-            </div>
-            <ComparisonChart series={alpha.series} benchmarkLabel={alpha.label} />
-            <p className="mt-2 text-xs text-zinc-400">
-              Time-weighted return vs the {alpha.label} over the same period. Alpha is how much you
-              beat (or trailed) simply holding the index.
-            </p>
-          </>
-        ) : (
-          <div className="flex h-24 items-center justify-center text-center text-sm text-zinc-400">
-            {alpha.reason}
-          </div>
-        )}
+      <div>
+        <SectionHeader>Performance</SectionHeader>
+        <PerformancePanel points={chartPoints} alpha={alpha} />
       </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium text-zinc-500">Clients</h2>
-          <Link href="/clients" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
-            Manage clients →
-          </Link>
-        </div>
+        <SectionHeader
+          right={
+            <Link href="/clients" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
+              Manage clients →
+            </Link>
+          }
+        >
+          Clients
+        </SectionHeader>
         <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
           <table className="w-full text-sm">
             <thead className="bg-zinc-100 text-left text-xs uppercase text-zinc-500 dark:bg-zinc-900/60">
@@ -211,14 +150,6 @@ export default async function DashboardPage() {
           </table>
         </div>
       </div>
-
-      <ShareLinkCard
-        title="Public track record link"
-        description="A read-only page for prospective investors: time-weighted performance vs the S&P only — no dollar amounts, no client names, no AUM."
-        path={fundShareToken ? `/share/f/${fundShareToken}` : null}
-        createAction={createFundShareLink}
-        revokeAction={revokeFundShareLink}
-      />
     </div>
   );
 }

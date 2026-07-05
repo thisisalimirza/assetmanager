@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getFundSummary, listClients } from "@/lib/portfolio";
 import { formatCurrency, formatSignedPercent, formatPercent } from "@/lib/format";
 import { ClientModal } from "@/app/components/ClientModal";
+import { PageHeader } from "@/app/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -11,13 +12,11 @@ export default async function ClientsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Clients</h1>
-          <p className="mt-1 text-sm text-zinc-500">Everyone with money in the fund.</p>
-        </div>
-        <ClientModal label="+ Add client" />
-      </div>
+      <PageHeader
+        title="Clients"
+        subtitle="Everyone with money in the fund."
+        actions={<ClientModal label="+ Add client" />}
+      />
 
       {clients.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { buttonStyles } from "./ui";
 
 // window.location.origin doesn't exist during SSR; useSyncExternalStore gives
 // us "" on the server and the real origin after hydration without a mismatch.
@@ -38,8 +39,7 @@ export function ShareLinkCard({
     <input type="hidden" name="id" value={clientId} />
   );
 
-  const buttonClass =
-    "rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800";
+  const buttonClass = buttonStyles.secondary;
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -99,10 +99,7 @@ export function ShareLinkCard({
             }}
           >
             {hidden}
-            <button
-              type="submit"
-              className="rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40"
-            >
+            <button type="submit" className={buttonStyles.danger}>
               Revoke
             </button>
           </form>

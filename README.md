@@ -46,7 +46,7 @@ instantly, which kills the old URL:
   chart of their actual dollars vs. the same cash flows in the S&P 500, and
   the printable statement (all-time or by period). It shows _only their own
   money_ — no other clients, no fund totals.
-- **Fund link** (`/share/f/<token>`, managed from the dashboard): for
+- **Fund link** (`/share/f/<token>`, managed from Settings): for
   prospective investors — the fund's time-weighted track record vs. the
   S&P 500 and a hypothetical growth-of-$10,000 figure. Deliberately contains
   **no dollar amounts, client names, or AUM**.
@@ -57,7 +57,8 @@ client name) across a database rebuild.
 
 ## Audit trail & reconciliation
 
-- **Audit trail** (`/audit`): every create/update/delete of a transaction or
+- **Audit trail** (`/audit`, linked from Settings and Transactions): every
+  create/update/delete of a transaction or
   valuation is also written to an append-only `audit_log` table with a full
   before/after JSON snapshot. The working tables stay editable (mistakes
   happen), but there is always a paper trail to reconstruct any balance.

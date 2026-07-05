@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listAuditLog, listClients, type AuditEntry } from "@/lib/portfolio";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { PageHeader } from "@/app/components/PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -66,16 +67,15 @@ export default async function AuditPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <Link href="/transactions" className="text-sm text-zinc-500 hover:underline">
-          ← Transactions
+      <div className="-mb-2">
+        <Link href="/settings" className="text-sm text-zinc-500 hover:underline">
+          ← Settings
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Audit trail</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Append-only record of every change to transactions and valuations — each entry keeps a
-          full before/after snapshot, so past states can always be reconstructed.
-        </p>
       </div>
+      <PageHeader
+        title="Audit trail"
+        subtitle="Append-only record of every change to transactions and valuations — each entry keeps a full before/after snapshot, so past states can always be reconstructed."
+      />
 
       {entries.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">
