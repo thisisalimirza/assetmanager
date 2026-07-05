@@ -71,6 +71,24 @@ client name) across a database rebuild.
   dated cash flow with running net invested, plus current value and return —
   for taxes or anyone asking "how much did I actually put in?".
 
+## Brokerage activity ledger (Robinhood CSV import)
+
+The **Activity** page holds the brokerage's own record — every trade,
+dividend, transfer, and interest payment — imported from Robinhood's account
+activity CSV export. Updating is drag-and-drop: drop a fresh export on the
+page, review exactly what's new in the confirmation step, and confirm.
+
+Imports are idempotent: rows are diffed against the stored ledger by content
+(comparing per-row *counts*, since identical rows like two same-day $200
+deposits legitimately occur), so re-importing an overlapping export only adds
+what's new and never duplicates. Rows recorded in the database but absent from
+an export covering their date range are flagged as a warning, never deleted.
+Each import writes an audit-trail entry. The parser
+(`src/lib/robinhood.ts`) handles Robinhood's quirks: multiline quoted
+descriptions, parenthesized negatives, and the trailing disclaimer row.
+
+The same drop-a-CSV pattern works on the Reconcile page (Venmo/bank exports).
+
 ## Stack
 
 - **Next.js (App Router)** — server-rendered pages + server actions. No separate

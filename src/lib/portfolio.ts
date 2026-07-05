@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { diffActivities, type ActivityRow } from "./robinhood";
 
 // NAV per unit at the fund's inception. Arbitrary base (like a fund launching
 // at $100/unit); all returns are measured relative to it, so the exact value
@@ -359,6 +360,81 @@ export async function listAuditLog(limit = 200): Promise<AuditEntry[]> {
       createdAt: String(r.created_at),
     };
   });
+}
+
+// --- Brokerage activity (Robinhood export ledger) ---
+// Raw activity rows imported from Robinhood CSV exports: trades, dividends,
+// transfers, interest. Import-only (no in-app editing) — the export is the
+// source of truth, and re-importing an overlapping export is a no-op for rows
+// already recorded (see diffActivities in lib/robinhood.ts).
+
+export type StoredActivity = ActivityRow & { id: number };
+
+export async function listActivities(): Promise<StoredActivity[]> {
+  const db = await getDb();
+  const res = await db.execute(
+    "SELECT id, activity_date, process_date, settle_date, instrument, description, trans_code, quantity, price, amount FROM activities ORDER BY activity_date DESC, id DESC"
+  );
+  return res.rows.map((r) => ({
+    id: Number(r.id),
+    activityDate: String(r.activity_date),
+    processDate: r.process_date == null ? null : String(r.process_date),
+    settleDate: r.settle_date == null ? null : String(r.settle_date),
+    instrument: r.instrument == null ? null : String(r.instrument),
+    description: String(r.description),
+    transCode: String(r.trans_code),
+    quantity: r.quantity == null ? null : Number(r.quantity),
+    price: r.price == null ? null : Number(r.price),
+    amount: r.amount == null ? null : Number(r.amount),
+  }));
+}
+
+/**
+ * Imports activity rows from a parsed CSV. The diff against the stored ledger
+ * is recomputed here (never trusted from the client), so double-submitting the
+ * same file cannot double-insert. Returns what actually happened.
+ */
+export async function importActivities(
+  incoming: ActivityRow[]
+): Promise<{ imported: number; duplicates: number; missing: number }> {
+  const existing = await listActivities();
+  const diff = diffActivities(existing, incoming);
+
+  const db = await getDb();
+  for (const row of diff.newRows) {
+    await db.execute({
+      sql: "INSERT INTO activities (activity_date, process_date, settle_date, instrument, description, trans_code, quantity, price, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      args: [
+        row.activityDate,
+        row.processDate,
+        row.settleDate,
+        row.instrument,
+        row.description,
+        row.transCode,
+        row.quantity,
+        row.price,
+        row.amount,
+      ],
+    });
+  }
+
+  if (diff.newRows.length > 0) {
+    await logAudit("activities", null, "create", {
+      after: {
+        imported: diff.newRows.length,
+        duplicatesSkipped: diff.duplicateCount,
+        missingFromCsv: diff.missingCount,
+        from: diff.from,
+        to: diff.to,
+      },
+    });
+  }
+
+  return {
+    imported: diff.newRows.length,
+    duplicates: diff.duplicateCount,
+    missing: diff.missingCount,
+  };
 }
 
 // --- Settings / fund share link ---

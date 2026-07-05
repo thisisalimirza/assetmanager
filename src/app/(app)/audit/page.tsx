@@ -37,7 +37,20 @@ function describeValuation(s: Snapshot): string {
   return `valuation of ${money(typeof value === "number" ? value : undefined)} on ${date(s.date)}`;
 }
 
+function describeActivityImport(s: Snapshot): string {
+  const n = typeof s.imported === "number" ? s.imported : "?";
+  const range = s.from && s.to ? ` (${date(s.from)} – ${date(s.to)})` : "";
+  const dup = typeof s.duplicatesSkipped === "number" && s.duplicatesSkipped > 0
+    ? `, ${s.duplicatesSkipped} already recorded`
+    : "";
+  return `Imported ${n} brokerage activity rows${range}${dup}`;
+}
+
 function describe(entry: AuditEntry, names: Map<number, string>): string {
+  if (entry.entity === "activities") {
+    const after = snap(entry.detail, "after");
+    return after ? describeActivityImport(after) : "Imported brokerage activity";
+  }
   const which = entry.entity === "transaction" ? describeTransaction : describeValuation;
   const before = snap(entry.detail, "before");
   const after = snap(entry.detail, "after");

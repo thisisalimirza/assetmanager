@@ -51,6 +51,22 @@ CREATE TABLE IF NOT EXISTS audit_log (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS activities (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity_date TEXT NOT NULL,
+  process_date TEXT,
+  settle_date TEXT,
+  instrument TEXT,
+  description TEXT NOT NULL,
+  trans_code TEXT NOT NULL,
+  quantity REAL,
+  price REAL,
+  amount REAL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_activities_date ON activities(activity_date);
+
 CREATE INDEX IF NOT EXISTS idx_transactions_client ON transactions(client_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_valuations_date ON valuations(date);
