@@ -10,6 +10,7 @@ import {
   type MatchResult,
   type ReconcileTx,
 } from "@/lib/reconcile";
+import { CsvDropZone } from "./CsvDropZone";
 
 export type { ReconcileTx };
 
@@ -24,11 +25,12 @@ export function ReconcileTool({
   const [result, setResult] = useState<MatchResult | null>(null);
   const [parsedCount, setParsedCount] = useState(0);
 
-  const run = () => {
-    const movements = parseCsv(text);
+  const runWith = (csvText: string) => {
+    const movements = parseCsv(csvText);
     setParsedCount(movements.length);
     setResult(matchMovements(movements, transactions));
   };
+  const run = () => runWith(text);
 
   const unreconciledMatchIds = result
     ? result.matched.filter((m) => !m.tx.reconciledAt).map((m) => m.tx.id)
@@ -38,12 +40,21 @@ export function ReconcileTool({
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <label htmlFor="csv" className="text-sm font-medium">
-          Paste a Venmo / bank CSV export
+          Drop or paste a Venmo / bank / Robinhood CSV export
         </label>
         <p className="mt-0.5 text-xs text-zinc-500">
           Any CSV works — each row just needs a date and an amount. Movements are matched to
           recorded transactions by amount, within {DATE_WINDOW_DAYS} days.
         </p>
+        <div className="mt-3">
+          <CsvDropZone
+            onFileText={(csvText) => {
+              setText(csvText);
+              runWith(csvText);
+            }}
+            hint="Drop a CSV here to match instantly — or click to browse"
+          />
+        </div>
         <textarea
           id="csv"
           value={text}

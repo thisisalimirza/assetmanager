@@ -220,6 +220,75 @@ export async function revokeFundShareLink() {
   revalidatePath("/");
 }
 
+// --- brokerage activity import ---
+
+export type ImportActivitiesState = {
+  ok?: boolean;
+  error?: string;
+  imported?: number;
+  duplicates?: number;
+  missing?: number;
+};
+
+function isIsoDate(v: unknown): v is string {
+  return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+}
+
+function asNullableNumber(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+
+/**
+ * Confirms an import from the wizard. The client sends the full parsed CSV as
+ * JSON; the rows are re-validated field by field here and the diff against the
+ * stored ledger is recomputed server-side, so a stale or replayed submission
+ * can't corrupt or duplicate the ledger.
+ */
+export async function importActivitiesAction(
+  _prev: ImportActivitiesState,
+  formData: FormData
+): Promise<ImportActivitiesState> {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(String(formData.get("rows") ?? ""));
+  } catch {
+    return { error: "Couldn't read the uploaded rows — try dropping the file again." };
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    return { error: "No activity rows to import." };
+  }
+  if (parsed.length > 50_000) {
+    return { error: "That file has too many rows to import in one go." };
+  }
+
+  const rows = [];
+  for (const raw of parsed) {
+    const r = raw as Record<string, unknown>;
+    if (!isIsoDate(r.activityDate) || typeof r.transCode !== "string" || !r.transCode.trim()) {
+      return { error: "The file contains rows that don't look like Robinhood activity." };
+    }
+    rows.push({
+      activityDate: r.activityDate,
+      processDate: isIsoDate(r.processDate) ? r.processDate : null,
+      settleDate: isIsoDate(r.settleDate) ? r.settleDate : null,
+      instrument: typeof r.instrument === "string" && r.instrument ? r.instrument : null,
+      description: typeof r.description === "string" ? r.description : "",
+      transCode: r.transCode,
+      quantity: asNullableNumber(r.quantity),
+      price: asNullableNumber(r.price),
+      amount: asNullableNumber(r.amount),
+    });
+  }
+
+  try {
+    const result = await portfolio.importActivities(rows);
+    revalidatePath("/activity");
+    return { ok: true, ...result };
+  } catch {
+    return { error: "Import failed — nothing was saved. Try again." };
+  }
+}
+
 // --- reconciliation ---
 
 export async function reconcileTransactions(formData: FormData) {
