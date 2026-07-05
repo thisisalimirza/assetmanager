@@ -1,9 +1,21 @@
 import { notFound } from "next/navigation";
-import { getFundShareToken, getFundSummary } from "@/lib/portfolio";
+import {
+  getFundShareToken,
+  getFundSummary,
+  getPublicShowDollars,
+  listActivities,
+} from "@/lib/portfolio";
 import { getAlpha } from "@/lib/analytics";
-import { formatCurrency, formatSignedPercent, formatDate } from "@/lib/format";
+import { classifyActivity } from "@/lib/robinhood";
+import {
+  formatCurrency,
+  formatSignedCurrency,
+  formatSignedPercent,
+  formatDate,
+} from "@/lib/format";
 import { StatCard } from "@/app/components/StatCard";
 import { ComparisonChart } from "@/app/components/ComparisonChart";
+import { ActivityTable } from "@/app/components/ActivityTable";
 
 export const dynamic = "force-dynamic";
 
@@ -19,8 +31,39 @@ export default async function FundSharePage({ params }: { params: Promise<{ toke
   const expected = await getFundShareToken();
   if (!expected || token !== expected) notFound();
 
-  const [fund, alpha] = await Promise.all([getFundSummary(), getAlpha()]);
+  const [fund, alpha, activities, showDollars] = await Promise.all([
+    getFundSummary(),
+    getAlpha(),
+    listActivities(),
+    getPublicShowDollars(),
+  ]);
   const growthOf10k = alpha.available ? 10_000 * (1 + alpha.fundReturn) : null;
+
+  // Detail level is the owner's choice (Settings → "Show dollar amounts on
+  // the public link"). Full transparency shows AUM, profit, and the complete
+  // ledger; the sanitized mode shows trades/dividends only, with quantities,
+  // amounts, and descriptions hidden (they reveal the fund's size) — cash
+  // transfers are clients' personal money movements and are hidden too.
+  // In sanitized mode the private fields are stripped here, server-side — not
+  // just hidden as table columns — because props passed to a client component
+  // are serialized into the page source verbatim.
+  const publicActivities = showDollars
+    ? activities
+    : activities
+        .filter((row) => {
+          const group = classifyActivity(row).group;
+          return group === "trade" || group === "dividend";
+        })
+        .map((row) => ({
+          ...row,
+          quantity: null,
+          amount: null,
+          // Keep only the classification marker; full descriptions embed
+          // share counts.
+          description: /dividend reinvestment/i.test(row.description)
+            ? "Dividend Reinvestment"
+            : "",
+        }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -30,6 +73,22 @@ export default async function FundSharePage({ params }: { params: Promise<{ toke
           {fund.asOf ? `As of ${formatDate(fund.asOf)}` : "No valuation recorded yet"}
         </p>
       </div>
+
+      {showDollars && (
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard
+            label="Assets under management"
+            value={formatCurrency(fund.aum)}
+            hint={fund.asOf ? `as of ${formatDate(fund.asOf)}` : undefined}
+          />
+          <StatCard
+            label="Total profit / loss"
+            value={formatSignedCurrency(fund.totalProfit)}
+            tone={fund.totalProfit >= 0 ? "positive" : "negative"}
+            hint={`on ${formatCurrency(fund.totalCostBasis)} invested`}
+          />
+        </div>
+      )}
 
       {alpha.available ? (
         <>
@@ -79,6 +138,20 @@ export default async function FundSharePage({ params }: { params: Promise<{ toke
             hint="since inception"
           />
           <p className="mt-3 text-sm text-zinc-400">{alpha.reason}</p>
+        </div>
+      )}
+
+      {publicActivities.length > 0 && (
+        <div>
+          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-medium text-zinc-500">Activity</h2>
+            {!showDollars && (
+              <span className="text-xs text-zinc-400">
+                Quantities and dollar amounts are omitted on this public view.
+              </span>
+            )}
+          </div>
+          <ActivityTable rows={publicActivities} variant={showDollars ? "full" : "public"} />
         </div>
       )}
 
