@@ -36,10 +36,22 @@ function monthLabel(iso: string): string {
 }
 
 /**
- * The full brokerage ledger: filter chips by kind, free-text ticker search,
- * and month separators so a multi-year history stays scannable.
+ * The brokerage ledger: filter chips by kind, free-text ticker search, and
+ * month separators so a multi-year history stays scannable.
+ *
+ * `variant="public"` renders the sanitized read-only version used on the
+ * fund's share link: date, type, instrument, and market price only — no
+ * quantities, dollar amounts, or descriptions, since those reveal the fund's
+ * size (the caller is also expected to pass only trade/dividend rows).
  */
-export function ActivityTable({ rows }: { rows: Row[] }) {
+export function ActivityTable({
+  rows,
+  variant = "full",
+}: {
+  rows: Row[];
+  variant?: "full" | "public";
+}) {
+  const isPublic = variant === "public";
   const [filter, setFilter] = useState<ActivityGroup | "all">("all");
   const [query, setQuery] = useState("");
 
@@ -106,10 +118,10 @@ export function ActivityTable({ rows }: { rows: Row[] }) {
                 <th className="px-4 py-2.5 font-medium">Date</th>
                 <th className="px-4 py-2.5 font-medium">Type</th>
                 <th className="px-4 py-2.5 font-medium">Instrument</th>
-                <th className="px-4 py-2.5 font-medium">Description</th>
-                <th className="px-4 py-2.5 text-right font-medium">Qty</th>
+                {!isPublic && <th className="px-4 py-2.5 font-medium">Description</th>}
+                {!isPublic && <th className="px-4 py-2.5 text-right font-medium">Qty</th>}
                 <th className="px-4 py-2.5 text-right font-medium">Price</th>
-                <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+                {!isPublic && <th className="px-4 py-2.5 text-right font-medium">Amount</th>}
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-zinc-900">
@@ -119,7 +131,7 @@ export function ActivityTable({ rows }: { rows: Row[] }) {
                 return [
                   newMonth ? (
                     <tr key={`m-${row.id}`} className="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950/50">
-                      <td colSpan={7} className="px-4 py-1.5 text-xs font-medium uppercase tracking-wide text-zinc-400">
+                      <td colSpan={isPublic ? 4 : 7} className="px-4 py-1.5 text-xs font-medium uppercase tracking-wide text-zinc-400">
                         {monthLabel(row.activityDate)}
                       </td>
                     </tr>
@@ -132,27 +144,33 @@ export function ActivityTable({ rows }: { rows: Row[] }) {
                       {kind.label}
                     </td>
                     <td className="px-4 py-2 font-medium">{row.instrument ?? "—"}</td>
-                    <td className="max-w-64 truncate px-4 py-2 text-xs text-zinc-500" title={shortDescription(row)}>
-                      {shortDescription(row)}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-zinc-500">
-                      {row.quantity ?? ""}
-                    </td>
+                    {!isPublic && (
+                      <td className="max-w-64 truncate px-4 py-2 text-xs text-zinc-500" title={shortDescription(row)}>
+                        {shortDescription(row)}
+                      </td>
+                    )}
+                    {!isPublic && (
+                      <td className="px-4 py-2 text-right tabular-nums text-zinc-500">
+                        {row.quantity ?? ""}
+                      </td>
+                    )}
                     <td className="px-4 py-2 text-right tabular-nums text-zinc-500">
                       {row.price != null ? formatCurrency(row.price) : ""}
                     </td>
-                    <td
-                      className={
-                        "whitespace-nowrap px-4 py-2 text-right tabular-nums " +
-                        (row.amount == null
-                          ? "text-zinc-400"
-                          : row.amount < 0
-                            ? "text-red-600 dark:text-red-400"
-                            : "text-emerald-600 dark:text-emerald-400")
-                      }
-                    >
-                      {row.amount != null ? formatSignedCurrency(row.amount) : "—"}
-                    </td>
+                    {!isPublic && (
+                      <td
+                        className={
+                          "whitespace-nowrap px-4 py-2 text-right tabular-nums " +
+                          (row.amount == null
+                            ? "text-zinc-400"
+                            : row.amount < 0
+                              ? "text-red-600 dark:text-red-400"
+                              : "text-emerald-600 dark:text-emerald-400")
+                        }
+                      >
+                        {row.amount != null ? formatSignedCurrency(row.amount) : "—"}
+                      </td>
+                    )}
                   </tr>,
                 ];
               })}

@@ -48,8 +48,13 @@ instantly, which kills the old URL:
   money_ — no other clients, no fund totals.
 - **Fund link** (`/share/f/<token>`, managed from Settings): for
   prospective investors — the fund's time-weighted track record vs. the
-  S&P 500 and a hypothetical growth-of-$10,000 figure. Deliberately contains
-  **no dollar amounts, client names, or AUM**.
+  S&P 500, a hypothetical growth-of-$10,000 figure, and the brokerage
+  activity ledger. How much it reveals is a Settings toggle ("Show dollar
+  amounts on the public link"): **on** (the default) shows AUM, total
+  profit, and the complete ledger with real dollar amounts; **off** shows a
+  percent-only track record — trades reduced to date/ticker/market price,
+  cash transfers hidden, no AUM or quantities. Client names are never shown
+  either way.
 
 Share pages are excluded from search indexing and never expose edit actions.
 `npm run reconcile` and `npm run gen-sql` preserve client share links (by

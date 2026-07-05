@@ -459,6 +459,30 @@ export async function setFundShareToken(token: string | null): Promise<void> {
   });
 }
 
+// Whether the public track record link shows real dollar figures (AUM, profit,
+// full activity amounts) or the sanitized percent-only view. Defaults to ON —
+// the owner's stated preference is full transparency; the Settings toggle
+// flips it off without redeploying.
+const PUBLIC_SHOW_DOLLARS_KEY = "public_show_dollars";
+
+export async function getPublicShowDollars(): Promise<boolean> {
+  const db = await getDb();
+  const res = await db.execute({
+    sql: "SELECT value FROM settings WHERE key = ?",
+    args: [PUBLIC_SHOW_DOLLARS_KEY],
+  });
+  const v = res.rows[0]?.value;
+  return v == null ? true : String(v) === "1";
+}
+
+export async function setPublicShowDollars(show: boolean): Promise<void> {
+  const db = await getDb();
+  await db.execute({
+    sql: "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    args: [PUBLIC_SHOW_DOLLARS_KEY, show ? "1" : "0"],
+  });
+}
+
 // --- Fund accounting (unit ledger) ---
 
 type Ledger = {

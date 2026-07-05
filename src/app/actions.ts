@@ -212,12 +212,17 @@ export async function revokeClientShareLink(formData: FormData) {
 
 export async function createFundShareLink() {
   await portfolio.setFundShareToken(generateShareToken());
-  revalidatePath("/");
+  revalidatePath("/settings");
 }
 
 export async function revokeFundShareLink() {
   await portfolio.setFundShareToken(null);
-  revalidatePath("/");
+  revalidatePath("/settings");
+}
+
+export async function setPublicDollars(formData: FormData) {
+  await portfolio.setPublicShowDollars(String(formData.get("value")) === "1");
+  revalidatePath("/settings");
 }
 
 // --- brokerage activity import ---
