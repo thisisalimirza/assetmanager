@@ -20,7 +20,13 @@ export default async function LoginPage({
           >
             Capital <span className="text-[var(--caf-signal-deep)]">Alpha</span> Fund
           </Link>
-          <p className="mt-2 text-sm text-[var(--caf-mute)]">Member portal — enter your password</p>
+          <p className="mt-2 text-sm text-[var(--caf-mute)]">
+            Books login — for managing the fund ledger
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--caf-mute)]">
+            If you are a member looking up your balance, use the private link
+            Ali sent you. There is no member password.
+          </p>
         </div>
         <form
           action={login}
