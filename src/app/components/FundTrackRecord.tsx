@@ -133,11 +133,13 @@ export async function FundTrackRecord() {
       <div className="rounded-xl bg-zinc-100 p-4 text-xs leading-relaxed text-zinc-500 dark:bg-zinc-900">
         <p className="mb-1 font-medium text-zinc-600 dark:text-zinc-400">How this is calculated</p>
         The fund uses unit (NAV) accounting, like a mutual fund: performance is time-weighted, so
-        it reflects pure investment results regardless of when money moved in or out. Use the
-        YTD / 3M / 6M / 1Y / All filters to change the comparison window against the S&amp;P 500.
-        Windows that begin before the first audited valuation are measured from that first mark
-        instead. The $10,000 figure is a hypothetical illustration over the full audited period,
-        not an actual account. Past performance does not guarantee future results.
+        it reflects pure investment results regardless of when money moved in or out. That means
+        YTD can look lower than &quot;account value is up X%&quot; — deposits raise the balance
+        without counting as return. Use the YTD / 3M / 6M / 1Y / All filters to change the
+        comparison window against the S&amp;P 500. Fixed windows (3M / 6M / 1Y) stay unavailable
+        until there is a full window of audited history. The $10,000 figure is a hypothetical
+        illustration over the full audited period, not an actual account. Past performance does
+        not guarantee future results.
       </div>
     </div>
   );

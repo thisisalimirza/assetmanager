@@ -196,16 +196,22 @@ export default async function MarketingPage() {
             <div>
               <dt className="text-sm text-[var(--caf-mute)]">
                 {headline?.available && ytd?.available && headline === ytd
-                  ? "YTD fund return"
-                  : "Fund return"}
+                  ? "YTD NAV return"
+                  : "NAV return"}
               </dt>
               <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                {formatSignedPercent(headline?.available ? headline.fundReturn : fund.twr)}
+                {formatSignedPercent(
+                  headline?.available
+                    ? headline.fundReturn
+                    : (all?.available ? all.fundReturn : fund.twr),
+                )}
               </dd>
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
                 {headline?.available
-                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)}`
-                  : "Time-weighted return since inception"}
+                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)} · per-unit, not account-dollar change`
+                  : all?.available
+                    ? `${formatDate(all.anchorDate)} → ${formatDate(all.asOf)} · per-unit since first audited mark`
+                    : "Time-weighted per-unit return"}
               </dd>
             </div>
             <div>

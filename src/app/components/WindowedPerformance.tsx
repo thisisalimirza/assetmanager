@@ -123,7 +123,7 @@ export function WindowedPerformance({
             }
           >
             <Stat
-              label="Fund"
+              label="Fund NAV"
               value={formatSignedPercent(alpha.fundReturn)}
               tone={alpha.fundReturn >= 0 ? "pos" : "neg"}
               marketing={isMarketing}
@@ -154,10 +154,11 @@ export function WindowedPerformance({
                 : "mt-2 text-xs text-zinc-400"
             }
           >
-            Time-weighted NAV return vs the {alpha.label} over the same calendar window. Fund
-            NAV is carried from the last mark on or before the start date; deposits do not
-            inflate the return. Alpha is how much the fund beat (or trailed) the index. Past
-            performance does not guarantee future results.
+            Time-weighted per-unit (NAV) return vs the {alpha.label} over the same calendar
+            window — the fair comparison to an index. This is not the % change in total
+            dollars in the account; deposits and withdrawals move that balance without being
+            investment performance. NAV is carried from the last mark on or before the start
+            date. Past performance does not guarantee future results.
           </p>
         </>
       ) : (
