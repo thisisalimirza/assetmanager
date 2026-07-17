@@ -53,12 +53,12 @@ export default async function MarketingPage() {
         </header>
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-12 pt-8 sm:justify-end sm:px-8 sm:pb-20 sm:pt-24">
-          <p className="marketing-rise font-display text-[clamp(2.35rem,7vw,5.5rem)] font-bold leading-[1.05]">
+          <p className="marketing-rise font-display text-[clamp(2.25rem,6.5vw,4.75rem)] font-semibold leading-[1.1] tracking-[-0.02em]">
             Capital
             <br />
             Alpha Fund
           </p>
-          <h1 className="marketing-rise marketing-rise-delay-1 mt-5 max-w-xl font-display text-xl font-semibold text-[#b8f53a] sm:mt-6 sm:text-[1.75rem] sm:leading-snug">
+          <h1 className="marketing-rise marketing-rise-delay-1 mt-5 max-w-md font-display text-xl font-medium leading-snug text-[#b8f53a] sm:mt-6 sm:text-2xl">
             My portfolio. Your seat at the table.
           </h1>
           <p className="marketing-rise marketing-rise-delay-2 mt-3 max-w-xl text-base text-[#d7e3dc] sm:mt-4 sm:text-xl">
@@ -87,10 +87,10 @@ export default async function MarketingPage() {
         <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           The track record
         </p>
-        <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-4xl">
+        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
           Built to beat sitting in cash — and measured against the market.
         </h2>
-        <p className="mt-4 max-w-2xl text-lg text-[var(--caf-mute)]">
+        <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
           Every dollar buys units in one shared portfolio. Gains and losses
           accrue only while your money is in — the same way a real fund works.
           {fund.asOf ? ` Figures as of ${formatDate(fund.asOf)}.` : ""}
@@ -157,10 +157,10 @@ export default async function MarketingPage() {
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             How it works
           </p>
-          <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-4xl">
+          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
             You are not getting a separate managed account. You are joining mine.
           </h2>
-          <p className="mt-4 max-w-2xl text-lg text-[var(--caf-mute)]">
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
             Capital Alpha Fund is Ali&apos;s personal brokerage portfolio, opened
             so people he trusts can put money in beside him. There is no
             advisory fee, no AUM cut, and no separate book of trades for each
@@ -216,10 +216,10 @@ export default async function MarketingPage() {
         <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           Invitation only
         </p>
-        <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-4xl">
+        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
           If we know each other and you want in, ask me.
         </h2>
-        <p className="mt-4 max-w-xl text-lg text-[var(--caf-mute)]">
+        <p className="mt-4 max-w-lg text-lg leading-relaxed text-[var(--caf-mute)]">
           There is no public signup. Members get a secret read-only link; I keep
           the books in the portal. Past performance is not a promise — markets
           move, and your money can go down.

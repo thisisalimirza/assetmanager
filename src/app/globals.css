@@ -19,7 +19,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-manrope);
-  --font-display: var(--font-sora);
+  --font-display: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -37,7 +37,7 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-sora), var(--font-manrope), ui-sans-serif, sans-serif;
+  font-family: var(--font-outfit), var(--font-manrope), ui-sans-serif, sans-serif;
 }
 
 /* --- Marketing motion --- */
