@@ -24,12 +24,19 @@ export default async function SettingsPage() {
         <SectionHeader>Sharing</SectionHeader>
         <div className="flex flex-col gap-3">
           <ShareLinkCard
-            title="Public track record link"
-            description="A read-only page for prospective investors: time-weighted performance vs the S&P and the trading record. Client names are never shown."
+            title="Shareable track record link"
+            description="Same content as the always-public /track-record page, but as a secret capability URL you can revoke. Client names are never shown."
             path={fundShareToken ? `/share/f/${fundShareToken}` : null}
             createAction={createFundShareLink}
             revokeAction={revokeFundShareLink}
           />
+          <p className="text-xs text-zinc-500">
+            The marketing site also links to the stable public page{" "}
+            <a href="/track-record" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
+              /track-record
+            </a>
+            .
+          </p>
 
           <div className={`${cardStyles} flex flex-wrap items-center justify-between gap-3`}>
             <div>
