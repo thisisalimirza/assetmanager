@@ -1,7 +1,7 @@
 import { formatCurrency } from "@/lib/format";
 
 /**
- * Visual for the public $1k → $100k goal using the portfolio's actual
+ * Visual for the public $1k → $100k goal using the Alpha Fund's actual
  * current value (AUM), not a hypothetical.
  */
 export function GoalProgress({
@@ -27,7 +27,7 @@ export function GoalProgress({
     <div className="w-full">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
-          Portfolio goal · $1k → $100k
+          Alpha Fund goal · $1k → $100k
         </p>
         <p className="text-sm text-[var(--caf-mute)]">
           {linearPct.toFixed(1)}% of the way
@@ -42,7 +42,7 @@ export function GoalProgress({
         </span>
       </p>
       <p className="mt-1 text-sm text-[var(--caf-mute)]">
-        Actual value of the shared portfolio today
+        Actual value of the Alpha Fund today
       </p>
 
       <div className="relative mt-8">

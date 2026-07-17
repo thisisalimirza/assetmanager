@@ -23,7 +23,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Is this like a bank account?",
-    a: "No. Money in the fund is invested in the stock market and related investments. The value goes up and down. It is not FDIC insured, and it is not a savings account.",
+    a: "No. Money in the Alpha Fund is invested in the stock market and related investments. The value goes up and down. It is not FDIC insured, and it is not a savings account.",
   },
   {
     q: "Can I lose money?",
@@ -39,19 +39,19 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "Is this run by a licensed advisor?",
-    a: "No. I am not licensed. This is an informal friends-and-family pool — not a commercial advisory service and not a public fund offering.",
+    a: "No. I am not licensed. This is an informal friends-and-family arrangement around the Alpha Fund — not a commercial advisory service and not a public fund offering.",
   },
   {
     q: "What is the $1,000 → $100,000 goal?",
-    a: "The public goal is to grow this portfolio from a $1,000 starting marker toward $100,000 in actual value. The meter on this page uses the real portfolio total, and the live charts are part of that public track record.",
+    a: "The public goal is to grow the Alpha Fund from a $1,000 starting marker toward $100,000 in actual value. The meter on this page uses the real fund total, and the live charts are part of that public track record.",
   },
   {
     q: "What if I want more money in later?",
-    a: "Same process as the first time: tell me, send the transfer I ask for, and it gets recorded. New money buys into the fund at whatever the value is on that day — you do not get credited for gains from before you added it.",
+    a: "Same process as the first time: tell me, send the transfer I ask for, and it gets recorded. New money buys into the Alpha Fund at whatever the value is on that day — you do not get credited for gains from before you added it.",
   },
   {
     q: "What is the Substack for?",
-    a: "Public writing about markets and positions — free for anyone to read. Being in the fund is separate and private; reading the notes does not mean you are invested.",
+    a: "Public writing about markets and positions — free for anyone to read. Being in the Alpha Fund is separate and private; reading the notes does not mean you are invested.",
   },
 ];
 
@@ -66,7 +66,7 @@ const TERMS: { title: string; body: string }[] = [
   },
   {
     title: "This is not paid advice",
-    body: "I am not acting as your licensed advisor and I am not charging you. You are choosing to put money into a shared pool managed informally.",
+    body: "I am not acting as your licensed advisor and I am not charging you. You are choosing to put money into the Alpha Fund, managed informally.",
   },
   {
     title: "Cash moves by arrangement",
@@ -144,8 +144,8 @@ export default async function MarketingPage() {
             Put money beside people you trust — without needing to pick stocks.
           </h1>
           <p className="marketing-rise marketing-rise-delay-2 mt-3 max-w-xl text-base text-[#d7e3dc] sm:mt-4 sm:text-xl">
-            An invite-only investment pool for close friends and family. One
-            shared portfolio, clear tracking, no charge — by design.
+            An invite-only Alpha Fund for close friends and family — clear
+            tracking, no charge, by design.
           </p>
           <div className="marketing-rise marketing-rise-delay-3 mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
             <a
@@ -176,7 +176,7 @@ export default async function MarketingPage() {
                 Live track record
               </p>
               <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-[2.5rem]">
-                How the portfolio is doing — versus the market.
+                How the Alpha Fund is doing — versus the market.
               </h2>
             </div>
             <Link
@@ -187,7 +187,7 @@ export default async function MarketingPage() {
             </Link>
           </div>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--caf-mute)]">
-            Real numbers from the shared portfolio. Use the filters to compare
+            Real numbers from the Alpha Fund. Use the filters to compare
             against the S&amp;P 500 for YTD, recent windows, or the full record.
             Past performance does not guarantee future results.
           </p>
@@ -209,12 +209,12 @@ export default async function MarketingPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-sm text-[var(--caf-mute)]">Portfolio value</dt>
+              <dt className="text-sm text-[var(--caf-mute)]">Alpha Fund value</dt>
               <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
                 {formatCurrency(fund.aum)}
               </dd>
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                Actual value of the shared pot
+                Actual value of the Alpha Fund
                 {fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""}.
               </dd>
             </div>
@@ -235,7 +235,7 @@ export default async function MarketingPage() {
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
                 {headline?.available
                   ? "Alpha — how much we beat or trailed the market in that window"
-                  : "Grow this portfolio from a $1,000 marker toward $100k"}
+                  : "Grow the Alpha Fund from a $1,000 marker toward $100k"}
               </dd>
             </div>
           </dl>
@@ -297,7 +297,7 @@ export default async function MarketingPage() {
           In plain English
         </p>
         <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
-          Think of it as one shared investment pot.
+          This is the Alpha Fund.
         </h2>
         <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
           <p>
@@ -308,15 +308,15 @@ export default async function MarketingPage() {
           <p>
             So people I already know can put money into{" "}
             <strong className="font-semibold text-[var(--caf-ink)]">
-              one portfolio I run
+              the Alpha Fund
             </strong>
-            . Everyone owns a slice of that same pot. When investments do well,
-            every slice grows. When they do poorly, every slice shrinks.
+            . Everyone owns a share of it. When investments do well,
+            every share grows. When they do poorly, every share shrinks.
           </p>
           <p>
             There is no app to download and no stock-picking homework for you.
-            You send money, it gets invested with the pool, and you check your
-            slice on a private link.
+            You send money, it gets invested in the Alpha Fund, and you check your
+            share on a private link.
           </p>
         </div>
       </section>
@@ -337,7 +337,7 @@ export default async function MarketingPage() {
               relationship.
             </p>
             <p>
-              Longer term: this site documents growing the portfolio from a{" "}
+              Longer term: this site documents growing the Alpha Fund from a{" "}
               <strong className="font-semibold text-[var(--caf-ink)]">$1,000</strong>
               {" "}marker toward{" "}
               <strong className="font-semibold text-[var(--caf-ink)]">$100,000</strong>
@@ -455,7 +455,7 @@ export default async function MarketingPage() {
         <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
           <p>
             Tell me how much you need (some or all). I sell what is needed from
-            the shared account, send the cash back the same way we usually
+            the Alpha Fund account, send the cash back the same way we usually
             exchange money, and update the books so your share shrinks by the
             right amount.
           </p>
@@ -491,7 +491,7 @@ export default async function MarketingPage() {
             >
               public track record
             </Link>{" "}
-            for the whole fund — performance and activity, still without member
+            for the Alpha Fund — performance and activity, still without member
             identities.
           </p>
         </div>
@@ -509,7 +509,7 @@ export default async function MarketingPage() {
           <div>
             <dt className="font-display text-lg font-semibold">Your share / units</dt>
             <dd className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              When you put money in, you buy a slice of the pot. We track that
+              When you put money in, you buy a share of the Alpha Fund. We track that
               as &quot;units&quot; so timing is fair — like a mutual fund,
               without you needing a brokerage login.
             </dd>
@@ -518,7 +518,7 @@ export default async function MarketingPage() {
             <dt className="font-display text-lg font-semibold">What your money is worth</dt>
             <dd className="mt-2 leading-relaxed text-[var(--caf-mute)]">
               Investments are marked to market from time to time. Your balance =
-              your slice × that updated value. Between updates, the number can
+              your share × that updated value. Between updates, the number can
               be a little stale.
             </dd>
           </div>
@@ -533,7 +533,7 @@ export default async function MarketingPage() {
           <div>
             <dt className="font-display text-lg font-semibold">Alpha</dt>
             <dd className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              The gap between the fund&apos;s return and the market&apos;s
+              The gap between the Alpha Fund&apos;s return and the market&apos;s
               return over the same period. Positive means better than the
               yardstick; negative means worse.
             </dd>

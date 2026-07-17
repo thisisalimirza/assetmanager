@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · Capital Alpha Fund",
   },
   description:
-    "A private, invite-only investment pool for close friends and family. One shared portfolio, clear tracking, no fees. Not a licensed advisory.",
+    "A private, invite-only Alpha Fund for close friends and family — clear tracking, no fees. Not a licensed advisory.",
   metadataBase: new URL("https://capitalalphafund.com"),
 };
 

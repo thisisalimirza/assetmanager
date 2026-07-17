@@ -53,7 +53,7 @@ export async function FundTrackRecord() {
         <h1 className="text-2xl font-semibold tracking-tight">Fund performance</h1>
         <p className="mt-1 text-sm text-zinc-500">
           {fund.asOf ? `As of ${formatDate(fund.asOf)}` : "No valuation recorded yet"}
-          {" · "}Public track record of the shared portfolio — no member names
+          {" · "}Public track record of the Alpha Fund — no member names
         </p>
       </div>
 

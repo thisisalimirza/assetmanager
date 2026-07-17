@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Public track record",
   description:
-    "Live performance of Capital Alpha Fund versus the S&P 500 — a public record of the shared portfolio.",
+    "Live performance of Capital Alpha Fund versus the S&P 500 — a public record of the Alpha Fund.",
   robots: { index: true, follow: true },
 };
 
