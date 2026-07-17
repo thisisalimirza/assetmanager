@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getFundSummary } from "@/lib/portfolio";
+import { getPublicTrackRecordHref } from "@/lib/public-links";
 import { getAlpha } from "@/lib/analytics";
 import {
   formatCurrency,
@@ -78,7 +79,11 @@ const TERMS: { title: string; body: string }[] = [
 ];
 
 export default async function MarketingPage() {
-  const [fund, alpha] = await Promise.all([getFundSummary(), getAlpha()]);
+  const [fund, alpha, trackRecordHref] = await Promise.all([
+    getFundSummary(),
+    getAlpha(),
+    getPublicTrackRecordHref(),
+  ]);
 
   const headlineReturn = alpha.available ? alpha.fundReturn : fund.twr;
   const growthOf1k = 1_000 * (1 + fund.twr);
@@ -114,7 +119,7 @@ export default async function MarketingPage() {
             Capital Alpha Fund
           </p>
           <nav className="flex flex-wrap items-center justify-end gap-4 text-sm text-[var(--caf-mist)] sm:gap-6">
-            <Link href="/track-record" className="transition-colors hover:text-white">
+            <Link href={trackRecordHref} className="transition-colors hover:text-white">
               Track record
             </Link>
             <a href="#join" className="transition-colors hover:text-white">
@@ -153,7 +158,7 @@ export default async function MarketingPage() {
               How to join
             </a>
             <Link
-              href="/track-record"
+              href={trackRecordHref}
               className="inline-flex items-center justify-center border border-[var(--caf-mist)]/40 px-6 py-3 text-sm font-medium text-[var(--caf-paper)] transition-colors hover:border-[var(--caf-signal)] hover:text-[var(--caf-signal)]"
             >
               See live track record
@@ -239,7 +244,7 @@ export default async function MarketingPage() {
             </h2>
           </div>
           <Link
-            href="/track-record"
+            href={trackRecordHref}
             className="inline-flex items-center justify-center bg-[var(--caf-ink)] px-5 py-2.5 text-sm font-semibold text-[var(--caf-paper)] transition-transform hover:-translate-y-0.5"
           >
             Open full track record →
@@ -473,7 +478,7 @@ export default async function MarketingPage() {
         </p>
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
           Anyone can also view the{" "}
-          <Link href="/track-record" className="font-semibold text-[var(--caf-ink)] underline-offset-4 hover:underline">
+          <Link href={trackRecordHref} className="font-semibold text-[var(--caf-ink)] underline-offset-4 hover:underline">
             public track record
           </Link>{" "}
           for the whole fund — performance and activity, still without member
@@ -595,7 +600,7 @@ export default async function MarketingPage() {
               Read Capital Alpha on Substack →
             </a>
             <Link
-              href="/track-record"
+              href={trackRecordHref}
               className="inline-flex items-center justify-center border border-[var(--caf-ink)]/20 px-6 py-3 text-sm font-medium transition-colors hover:border-[var(--caf-ink)]"
             >
               Live track record
@@ -654,7 +659,7 @@ export default async function MarketingPage() {
           </div>
           <div className="flex flex-col gap-2 sm:items-end">
             <Link
-              href="/track-record"
+              href={trackRecordHref}
               className="text-[var(--caf-ink)] underline-offset-4 hover:underline"
             >
               Track record →

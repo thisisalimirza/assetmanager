@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getFundShareToken } from "@/lib/portfolio";
 import { FundTrackRecord } from "@/app/components/FundTrackRecord";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +12,14 @@ export const metadata: Metadata = {
     "Live performance of Capital Alpha Fund versus the S&P 500 — a public record of the shared portfolio.",
 };
 
-export default function TrackRecordPage() {
+/**
+ * Convenience alias. When Settings has a fund share token, send visitors to
+ * the canonical capability URL (`/share/f/<token>`).
+ */
+export default async function TrackRecordPage() {
+  const token = await getFundShareToken();
+  if (token) redirect(`/share/f/${token}`);
+
   return (
     <div className="flex min-h-screen flex-col bg-[var(--caf-paper)] text-[var(--caf-ink)]">
       <header className="border-b border-[var(--caf-mist)] bg-white/80">

@@ -4,10 +4,7 @@ import { FundTrackRecord } from "@/app/components/FundTrackRecord";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Capability-URL version of the public track record (same content as
- * /track-record). Useful for sharing a stable secret link from Settings.
- */
+/** Canonical public track record — capability URL managed in Settings. */
 export default async function FundSharePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const expected = await getFundShareToken();
