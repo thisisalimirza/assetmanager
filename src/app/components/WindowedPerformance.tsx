@@ -78,7 +78,13 @@ export function WindowedPerformance({
               {active.requestedStart &&
               active.requestedStart < alpha.anchorDate &&
               active.id !== "all"
-                ? " · window starts at first audited mark"
+                ? " · from first audited mark"
+                : ""}
+              {alpha.fundMarkDate < alpha.anchorDate
+                ? ` · fund NAV carried from ${formatDate(alpha.fundMarkDate)}`
+                : ""}
+              {alpha.benchmarkAsOfDate < alpha.asOf
+                ? ` · ${alpha.label} as of ${formatDate(alpha.benchmarkAsOfDate)}`
                 : ""}
             </p>
           )}
@@ -148,9 +154,10 @@ export function WindowedPerformance({
                 : "mt-2 text-xs text-zinc-400"
             }
           >
-            Time-weighted return vs the {alpha.label} over the selected window. Alpha is how much
-            the fund beat (or trailed) simply holding the index. Past performance does not
-            guarantee future results.
+            Time-weighted NAV return vs the {alpha.label} over the same calendar window. Fund
+            NAV is carried from the last mark on or before the start date; deposits do not
+            inflate the return. Alpha is how much the fund beat (or trailed) the index. Past
+            performance does not guarantee future results.
           </p>
         </>
       ) : (
