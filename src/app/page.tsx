@@ -41,7 +41,7 @@ export default async function MarketingPage() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--caf-ink)] via-[var(--caf-ink)]/55 to-transparent" />
 
         <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
-          <p className="font-[family-name:var(--font-syne)] text-sm font-semibold tracking-[0.18em] uppercase text-[var(--caf-signal)]">
+          <p className="font-display text-sm font-semibold tracking-[0.08em] uppercase text-[var(--caf-signal)]">
             Capital Alpha Fund
           </p>
           <Link
@@ -53,12 +53,12 @@ export default async function MarketingPage() {
         </header>
 
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-12 pt-8 sm:justify-end sm:px-8 sm:pb-20 sm:pt-24">
-          <p className="marketing-rise font-[family-name:var(--font-syne)] text-[clamp(2.4rem,8vw,6.5rem)] font-extrabold leading-[0.92] tracking-tight">
+          <p className="marketing-rise font-display text-[clamp(2.35rem,7vw,5.5rem)] font-bold leading-[1.05]">
             Capital
             <br />
             Alpha Fund
           </p>
-          <h1 className="marketing-rise marketing-rise-delay-1 mt-5 max-w-xl font-[family-name:var(--font-syne)] text-xl font-semibold tracking-tight text-[#b8f53a] sm:mt-6 sm:text-3xl">
+          <h1 className="marketing-rise marketing-rise-delay-1 mt-5 max-w-xl font-display text-xl font-semibold text-[#b8f53a] sm:mt-6 sm:text-[1.75rem] sm:leading-snug">
             My portfolio. Your seat at the table.
           </h1>
           <p className="marketing-rise marketing-rise-delay-2 mt-3 max-w-xl text-base text-[#d7e3dc] sm:mt-4 sm:text-xl">
@@ -84,10 +84,10 @@ export default async function MarketingPage() {
 
       {/* —— Performance —— */}
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-        <p className="font-[family-name:var(--font-syne)] text-sm font-semibold tracking-[0.16em] uppercase text-[var(--caf-mute)]">
+        <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           The track record
         </p>
-        <h2 className="mt-3 max-w-2xl font-[family-name:var(--font-syne)] text-3xl font-bold tracking-tight sm:text-5xl">
+        <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-4xl">
           Built to beat sitting in cash — and measured against the market.
         </h2>
         <p className="mt-4 max-w-2xl text-lg text-[var(--caf-mute)]">
@@ -99,7 +99,7 @@ export default async function MarketingPage() {
         <dl className="mt-12 grid gap-10 border-t border-[var(--caf-mist)] pt-10 sm:grid-cols-3">
           <div>
             <dt className="text-sm text-[var(--caf-mute)]">Fund performance</dt>
-            <dd className="mt-2 font-[family-name:var(--font-syne)] text-4xl font-bold tracking-tight">
+            <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-normal">
               {formatSignedPercent(headlineReturn)}
             </dd>
             <dd className="mt-1 text-sm text-[var(--caf-mute)]">{headlineHint}</dd>
@@ -108,14 +108,14 @@ export default async function MarketingPage() {
             <>
               <div>
                 <dt className="text-sm text-[var(--caf-mute)]">{alpha.label}</dt>
-                <dd className="mt-2 font-[family-name:var(--font-syne)] text-4xl font-bold tracking-tight">
+                <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-normal">
                   {formatSignedPercent(alpha.benchmarkReturn)}
                 </dd>
                 <dd className="mt-1 text-sm text-[var(--caf-mute)]">same window</dd>
               </div>
               <div>
                 <dt className="text-sm text-[var(--caf-mute)]">Alpha</dt>
-                <dd className="mt-2 font-[family-name:var(--font-syne)] text-4xl font-bold tracking-tight text-[var(--caf-signal-deep)]">
+                <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-normal text-[var(--caf-signal-deep)]">
                   {formatSignedPercent(alpha.alpha)}
                 </dd>
                 <dd className="mt-1 text-sm text-[var(--caf-mute)]">
@@ -127,7 +127,7 @@ export default async function MarketingPage() {
             <>
               <div>
                 <dt className="text-sm text-[var(--caf-mute)]">Money-weighted</dt>
-                <dd className="mt-2 font-[family-name:var(--font-syne)] text-4xl font-bold tracking-tight">
+                <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-normal">
                   {formatSignedPercent(fund.simpleReturn)}
                 </dd>
                 <dd className="mt-1 text-sm text-[var(--caf-mute)]">
@@ -136,7 +136,7 @@ export default async function MarketingPage() {
               </div>
               <div>
                 <dt className="text-sm text-[var(--caf-mute)]">$10,000 would be</dt>
-                <dd className="mt-2 font-[family-name:var(--font-syne)] text-4xl font-bold tracking-tight">
+                <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-normal">
                   {formatCurrency(growthOf10k)}
                 </dd>
                 <dd className="mt-1 text-sm text-[var(--caf-mute)]">
@@ -154,10 +154,10 @@ export default async function MarketingPage() {
         className="border-y border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28"
       >
         <div className="mx-auto max-w-6xl">
-          <p className="font-[family-name:var(--font-syne)] text-sm font-semibold tracking-[0.16em] uppercase text-[var(--caf-mute)]">
+          <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             How it works
           </p>
-          <h2 className="mt-3 max-w-2xl font-[family-name:var(--font-syne)] text-3xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-4xl">
             You are not getting a separate managed account. You are joining mine.
           </h2>
           <p className="mt-4 max-w-2xl text-lg text-[var(--caf-mute)]">
@@ -169,10 +169,10 @@ export default async function MarketingPage() {
 
           <ol className="mt-14 grid gap-12 sm:grid-cols-3">
             <li>
-              <span className="font-[family-name:var(--font-syne)] text-sm font-semibold text-[var(--caf-signal-deep)]">
+              <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
                 01
               </span>
-              <h3 className="mt-3 font-[family-name:var(--font-syne)] text-xl font-semibold">
+              <h3 className="mt-3 font-display text-xl font-semibold">
                 You send money in
               </h3>
               <p className="mt-2 text-[var(--caf-mute)]">
@@ -182,10 +182,10 @@ export default async function MarketingPage() {
               </p>
             </li>
             <li>
-              <span className="font-[family-name:var(--font-syne)] text-sm font-semibold text-[var(--caf-signal-deep)]">
+              <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
                 02
               </span>
-              <h3 className="mt-3 font-[family-name:var(--font-syne)] text-xl font-semibold">
+              <h3 className="mt-3 font-display text-xl font-semibold">
                 I invest the pool
               </h3>
               <p className="mt-2 text-[var(--caf-mute)]">
@@ -195,10 +195,10 @@ export default async function MarketingPage() {
               </p>
             </li>
             <li>
-              <span className="font-[family-name:var(--font-syne)] text-sm font-semibold text-[var(--caf-signal-deep)]">
+              <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
                 03
               </span>
-              <h3 className="mt-3 font-[family-name:var(--font-syne)] text-xl font-semibold">
+              <h3 className="mt-3 font-display text-xl font-semibold">
                 You watch your share
               </h3>
               <p className="mt-2 text-[var(--caf-mute)]">
@@ -213,10 +213,10 @@ export default async function MarketingPage() {
 
       {/* —— Invite —— */}
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-        <p className="font-[family-name:var(--font-syne)] text-sm font-semibold tracking-[0.16em] uppercase text-[var(--caf-mute)]">
+        <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           Invitation only
         </p>
-        <h2 className="mt-3 max-w-2xl font-[family-name:var(--font-syne)] text-3xl font-bold tracking-tight sm:text-5xl">
+        <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-4xl">
           If we know each other and you want in, ask me.
         </h2>
         <p className="mt-4 max-w-xl text-lg text-[var(--caf-mute)]">
@@ -243,7 +243,7 @@ export default async function MarketingPage() {
       <footer className="border-t border-[var(--caf-mist)] px-5 py-10 text-sm text-[var(--caf-mute)] sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="font-[family-name:var(--font-syne)] text-base font-semibold text-[var(--caf-ink)]">
+            <p className="font-display text-base font-semibold text-[var(--caf-ink)]">
               Capital Alpha Fund
             </p>
             <p className="mt-2 max-w-xl">

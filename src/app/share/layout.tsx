@@ -11,7 +11,7 @@ export default function ShareLayout({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/80 print:hidden">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6">
-          <span className="font-[family-name:var(--font-syne)] font-semibold tracking-tight">
+          <span className="font-display font-semibold">
             Capital<span className="text-emerald-600 dark:text-emerald-400">Alpha</span>
           </span>
           <span className="border border-zinc-300 px-2.5 py-0.5 text-xs text-zinc-500 dark:border-zinc-700">

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Manrope, Syne } from "next/font/google";
+import { Geist_Mono, Manrope, Sora } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({
-  variable: "--font-syne",
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const manrope = Manrope({
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${manrope.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${sora.variable} ${manrope.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         {children}

@@ -9,17 +9,17 @@
   --caf-forest: #0f2a22;
   --caf-moss: #1a4034;
   --caf-signal: #b8f53a;
-  --caf-signal-deep: #8bc922;
+  --caf-signal-deep: #2f6b14;
   --caf-paper: #f2f5f3;
   --caf-mist: #d7e3dc;
-  --caf-mute: #6b7f74;
+  --caf-mute: #5a6e63;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-manrope);
-  --font-display: var(--font-syne);
+  --font-display: var(--font-sora);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -34,6 +34,10 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-manrope), ui-sans-serif, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-sora), var(--font-manrope), ui-sans-serif, sans-serif;
 }
 
 /* --- Marketing motion --- */

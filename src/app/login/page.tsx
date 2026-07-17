@@ -16,7 +16,7 @@ export default async function LoginPage({
         <div className="mb-8 text-center">
           <Link
             href="/"
-            className="font-[family-name:var(--font-syne)] text-2xl font-bold tracking-tight text-[var(--caf-ink)]"
+            className="font-display text-2xl font-semibold text-[var(--caf-ink)]"
           >
             Capital <span className="text-[var(--caf-signal-deep)]">Alpha</span> Fund
           </Link>
