@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { getFundSummary } from "@/lib/portfolio";
 import { getPublicTrackRecordHref } from "@/lib/public-links";
-import { getAlpha } from "@/lib/analytics";
+import { getAlphaWindows } from "@/lib/analytics";
 import {
   formatCurrency,
   formatSignedPercent,
   formatDate,
 } from "@/lib/format";
 import { HeroPerformance } from "@/app/components/HeroPerformance";
-import { ComparisonChart } from "@/app/components/ComparisonChart";
 import { ValueChart } from "@/app/components/ValueChart";
 import { GoalProgress } from "@/app/components/GoalProgress";
+import { WindowedPerformance } from "@/app/components/WindowedPerformance";
 
 export const dynamic = "force-dynamic";
 
@@ -79,25 +79,24 @@ const TERMS: { title: string; body: string }[] = [
 ];
 
 export default async function MarketingPage() {
-  const [fund, alpha, trackRecordHref] = await Promise.all([
+  const [fund, windows, trackRecordHref] = await Promise.all([
     getFundSummary(),
-    getAlpha(),
+    getAlphaWindows(),
     getPublicTrackRecordHref(),
   ]);
 
-  const headlineReturn = alpha.available ? alpha.fundReturn : fund.twr;
+  // Prefer YTD for the headline strip; fall back to all-time, then TWR.
+  const ytd = windows.find((w) => w.id === "ytd")?.alpha;
+  const all = windows.find((w) => w.id === "all")?.alpha;
+  const headline = ytd?.available ? ytd : all?.available ? all : null;
+  const anyBenchmark = windows.some((w) => w.alpha.available);
+
   const chartPoints = trimFlatSeedEra(
     dedupeNavSeries(fund.navSeries.map((p) => ({ date: p.date, value: p.navPerUnit }))),
   );
   const valuePoints = trimFlatSeedEra(
     dedupeNavSeries(fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }))),
   );
-
-  const performanceWindow = alpha.available
-    ? `from ${formatDate(alpha.anchorDate)} to ${formatDate(alpha.asOf)}`
-    : fund.asOf
-      ? `as of ${formatDate(fund.asOf)}`
-      : "since the fund started";
 
   return (
     <div className="bg-[var(--caf-paper)] text-[var(--caf-ink)]">
@@ -188,95 +187,81 @@ export default async function MarketingPage() {
             </Link>
           </div>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--caf-mute)]">
-            Real numbers from the shared portfolio. Past performance does not
-            guarantee future results. Window: {performanceWindow}.
+            Real numbers from the shared portfolio. Use the filters to compare
+            against the S&amp;P 500 for YTD, recent windows, or the full record.
+            Past performance does not guarantee future results.
           </p>
 
           <dl className="mt-10 grid gap-8 border-t border-[var(--caf-mist)] pt-10 sm:grid-cols-3">
             <div>
-              <dt className="text-sm text-[var(--caf-mute)]">Fund return</dt>
+              <dt className="text-sm text-[var(--caf-mute)]">
+                {headline?.available && ytd?.available && headline === ytd
+                  ? "YTD fund return"
+                  : "Fund return"}
+              </dt>
               <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                {formatSignedPercent(headlineReturn)}
+                {formatSignedPercent(headline?.available ? headline.fundReturn : fund.twr)}
               </dd>
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                How much the shared pot grew over this period after ups and downs.
+                {headline?.available
+                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)}`
+                  : "Time-weighted return since inception"}
               </dd>
             </div>
-            {alpha.available ? (
-              <>
-                <div>
-                  <dt className="text-sm text-[var(--caf-mute)]">S&amp;P 500</dt>
-                  <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                    {formatSignedPercent(alpha.benchmarkReturn)}
-                  </dd>
-                  <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                    Same stretch of time, owning the broad U.S. stock market.
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-[var(--caf-mute)]">Extra vs the market</dt>
-                  <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight text-[var(--caf-signal-deep)]">
-                    {formatSignedPercent(alpha.alpha)}
-                  </dd>
-                  <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                    Also called <em>alpha</em> — how much the fund beat or trailed
-                    that yardstick.
-                  </dd>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <dt className="text-sm text-[var(--caf-mute)]">Portfolio value</dt>
-                  <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                    {formatCurrency(fund.aum)}
-                  </dd>
-                  <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                    Actual value of the shared pot
-                    {fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""}.
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-sm text-[var(--caf-mute)]">Public goal</dt>
-                  <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                    $100,000
-                  </dd>
-                  <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                    Grow this portfolio from a $1,000 marker toward $100k.
-                  </dd>
-                </div>
-              </>
-            )}
+            <div>
+              <dt className="text-sm text-[var(--caf-mute)]">Portfolio value</dt>
+              <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
+                {formatCurrency(fund.aum)}
+              </dd>
+              <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
+                Actual value of the shared pot
+                {fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""}.
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-[var(--caf-mute)]">
+                {headline?.available ? `vs ${headline.label}` : "Public goal"}
+              </dt>
+              <dd
+                className={
+                  "mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight " +
+                  (headline?.available ? "text-[var(--caf-signal-deep)]" : "")
+                }
+              >
+                {headline?.available
+                  ? formatSignedPercent(headline.alpha)
+                  : "$100,000"}
+              </dd>
+              <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
+                {headline?.available
+                  ? "Alpha — how much we beat or trailed the market in that window"
+                  : "Grow this portfolio from a $1,000 marker toward $100k"}
+              </dd>
+            </div>
           </dl>
 
-          {/* Comparison chart — full width, primary visual */}
-          <div className="mt-12 border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-8">
-            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-              <h3 className="font-display text-lg font-semibold">
-                {alpha.available ? `Capital Alpha vs ${alpha.label}` : "Fund value over time"}
-              </h3>
-              <span className="text-sm text-[var(--caf-mute)]">
-                {alpha.available ? "growth of $1 invested" : "shared portfolio"}
-              </span>
-            </div>
-            {alpha.available ? (
-              <ComparisonChart
-                series={alpha.series}
-                benchmarkLabel={alpha.label}
-                primaryLabel="Capital Alpha"
-                height={300}
-              />
+          <div className="mt-12">
+            {anyBenchmark ? (
+              <WindowedPerformance windows={windows} height={320} variant="marketing" />
             ) : (
-              <ValueChart
-                points={valuePoints}
-                height={300}
-                emptyHint="Valuations will appear here as the books are updated."
-              />
+              <div className="border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-8">
+                <h3 className="font-display text-lg font-semibold">Fund value over time</h3>
+                <p className="mt-1 text-sm text-[var(--caf-mute)]">
+                  Market comparison fills in when benchmark data is available.
+                </p>
+                <div className="mt-4">
+                  <ValueChart
+                    points={valuePoints}
+                    height={300}
+                    emptyHint="Valuations will appear here as the books are updated."
+                  />
+                </div>
+              </div>
             )}
           </div>
 
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
-            {alpha.available && (
+            {anyBenchmark && (
               <div className="border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6">
                 <div className="mb-3 flex items-baseline justify-between gap-2">
                   <h3 className="font-display text-sm font-semibold text-[var(--caf-mute)]">
@@ -294,7 +279,7 @@ export default async function MarketingPage() {
             <div
               className={
                 "border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6 " +
-                (alpha.available ? "" : "lg:col-span-2")
+                (anyBenchmark ? "" : "lg:col-span-2")
               }
             >
               <GoalProgress

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getFundSummary, listClients } from "@/lib/portfolio";
-import { getAlpha } from "@/lib/analytics";
+import { getAlpha, getAlphaWindows } from "@/lib/analytics";
 import {
   formatCurrency,
   formatSignedCurrency,
@@ -24,7 +24,12 @@ function daysAgo(dateIso: string): number {
 }
 
 export default async function DashboardPage() {
-  const [fund, clients, alpha] = await Promise.all([getFundSummary(), listClients(), getAlpha()]);
+  const [fund, clients, alpha, windows] = await Promise.all([
+    getFundSummary(),
+    listClients(),
+    getAlpha(),
+    getAlphaWindows(),
+  ]);
   const chartPoints = fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }));
   const inception = fund.navSeries[0]?.date ?? null;
   const rankedClients = [...fund.clients].sort((a, b) => b.currentValue - a.currentValue);
@@ -93,7 +98,7 @@ export default async function DashboardPage() {
 
       <div>
         <SectionHeader>Performance</SectionHeader>
-        <PerformancePanel points={chartPoints} alpha={alpha} />
+        <PerformancePanel points={chartPoints} alpha={alpha} windows={windows} />
       </div>
 
       <div>
