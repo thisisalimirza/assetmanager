@@ -20,8 +20,10 @@ export default async function MarketingPage() {
     ? `since first audited mark · ${formatDate(alpha.anchorDate)}`
     : "time-weighted return since inception";
   const growthOf10k = 10_000 * (1 + headlineReturn);
-  const chartPoints = dedupeNavSeries(
-    fund.navSeries.map((p) => ({ date: p.date, value: p.navPerUnit })),
+  // Hero curve starts at the first real mark (NAV left the flat seed era) so
+  // the visual reads as the actual climb, not months of placeholder NAV 100.
+  const chartPoints = trimFlatSeedEra(
+    dedupeNavSeries(fund.navSeries.map((p) => ({ date: p.date, value: p.navPerUnit }))),
   );
 
   return (
@@ -50,20 +52,20 @@ export default async function MarketingPage() {
           </Link>
         </header>
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-end px-5 pb-14 pt-24 sm:px-8 sm:pb-20">
-          <p className="marketing-rise font-[family-name:var(--font-syne)] text-[clamp(2.75rem,9vw,6.5rem)] font-extrabold leading-[0.92] tracking-tight">
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-12 pt-8 sm:justify-end sm:px-8 sm:pb-20 sm:pt-24">
+          <p className="marketing-rise font-[family-name:var(--font-syne)] text-[clamp(2.4rem,8vw,6.5rem)] font-extrabold leading-[0.92] tracking-tight">
             Capital
             <br />
             Alpha Fund
           </p>
-          <h1 className="marketing-rise marketing-rise-delay-1 mt-6 max-w-xl font-[family-name:var(--font-syne)] text-2xl font-semibold tracking-tight text-[var(--caf-signal)] sm:text-3xl">
+          <h1 className="marketing-rise marketing-rise-delay-1 mt-5 max-w-xl font-[family-name:var(--font-syne)] text-xl font-semibold tracking-tight text-[#b8f53a] sm:mt-6 sm:text-3xl">
             My portfolio. Your seat at the table.
           </h1>
-          <p className="marketing-rise marketing-rise-delay-2 mt-4 max-w-xl text-lg text-[var(--caf-mist)] sm:text-xl">
+          <p className="marketing-rise marketing-rise-delay-2 mt-3 max-w-xl text-base text-[#d7e3dc] sm:mt-4 sm:text-xl">
             Friends and family who invest beside me — same book of trades, clear
             tracking, no fees.
           </p>
-          <div className="marketing-rise marketing-rise-delay-3 mt-8 flex flex-wrap items-center gap-3">
+          <div className="marketing-rise marketing-rise-delay-3 mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
             <Link
               href="/login"
               className="inline-flex items-center justify-center bg-[var(--caf-signal)] px-6 py-3 text-sm font-semibold text-[var(--caf-ink)] transition-transform hover:-translate-y-0.5"
@@ -264,4 +266,20 @@ function dedupeNavSeries(points: { date: string; value: number }[]) {
   const byDate = new Map<string, number>();
   for (const p of points) byDate.set(p.date, p.value);
   return [...byDate.entries()].map(([date, value]) => ({ date, value }));
+}
+
+/** Drop the leading run of near-identical seed NAV so the hero shows the climb. */
+function trimFlatSeedEra(points: { date: string; value: number }[]) {
+  if (points.length < 3) return points;
+  const first = points[0].value;
+  let start = 0;
+  for (let i = 1; i < points.length; i++) {
+    if (Math.abs(points[i].value - first) / Math.max(first, 1) < 0.02) {
+      start = i;
+    } else {
+      break;
+    }
+  }
+  // Keep one flat anchor point so the lift-off is visible.
+  return points.slice(Math.max(0, start));
 }
