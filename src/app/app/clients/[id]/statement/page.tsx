@@ -32,13 +32,13 @@ export default async function StatementPage({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between print:hidden">
-        <Link href={`/clients/${id}`} className="text-sm text-zinc-500 hover:underline">
+        <Link href={`/app/clients/${id}`} className="text-sm text-zinc-500 hover:underline">
           ← {client.name}
         </Link>
         <PrintButton />
       </div>
 
-      <RangeChips basePath={`/clients/${id}/statement`} period={period} />
+      <RangeChips basePath={`/app/clients/${id}/statement`} period={period} />
 
       {period ? (
         <PeriodStatementCard period={period} generatedOn={generatedOn} />

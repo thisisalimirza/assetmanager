@@ -30,7 +30,7 @@ export default async function ClientsPage() {
             return (
               <Link
                 key={client.id}
-                href={`/clients/${client.id}`}
+                href={`/app/clients/${client.id}`}
                 className="rounded-xl border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:bg-zinc-800/50"
               >
                 <div className="flex items-start justify-between">

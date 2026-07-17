@@ -99,7 +99,7 @@ export default async function DashboardPage() {
       <div>
         <SectionHeader
           right={
-            <Link href="/clients" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
+            <Link href="/app/clients" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
               Manage clients →
             </Link>
           }
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
               {rankedClients.map((c) => (
                 <tr key={c.id} className="border-t border-zinc-200 dark:border-zinc-800">
                   <td className="px-4 py-2.5 font-medium">
-                    <Link href={`/clients/${c.id}`} className="hover:underline">
+                    <Link href={`/app/clients/${c.id}`} className="hover:underline">
                       {c.name}
                     </Link>
                   </td>

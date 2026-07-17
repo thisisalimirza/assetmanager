@@ -45,7 +45,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   return (
     <div className="flex flex-col gap-8">
       <div className="-mb-4">
-        <Link href="/clients" className="text-sm text-zinc-500 hover:underline">
+        <Link href="/app/clients" className="text-sm text-zinc-500 hover:underline">
           ← Clients
         </Link>
       </div>
@@ -164,7 +164,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               running cost basis — for taxes or record-keeping.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link href={`/clients/${id}/statement`} className={buttonStyles.secondary}>
+              <Link href={`/app/clients/${id}/statement`} className={buttonStyles.secondary}>
                 View statement
               </Link>
               <a href={`/api/export/client/${id}`} className={buttonStyles.secondary}>

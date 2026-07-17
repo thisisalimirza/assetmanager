@@ -89,7 +89,7 @@ export default async function SettingsPage() {
                 before/after snapshots — the paper trail behind every balance.
               </p>
             </div>
-            <Link href="/audit" className={buttonStyles.secondary}>
+            <Link href="/app/audit" className={buttonStyles.secondary}>
               View audit trail
             </Link>
           </div>

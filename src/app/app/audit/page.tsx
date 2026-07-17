@@ -81,7 +81,7 @@ export default async function AuditPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="-mb-2">
-        <Link href="/settings" className="text-sm text-zinc-500 hover:underline">
+        <Link href="/app/settings" className="text-sm text-zinc-500 hover:underline">
           ← Settings
         </Link>
       </div>
