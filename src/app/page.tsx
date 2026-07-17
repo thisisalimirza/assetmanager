@@ -265,7 +265,7 @@ export default async function MarketingPage() {
               <div className="border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6">
                 <div className="mb-3 flex items-baseline justify-between gap-2">
                   <h3 className="font-display text-sm font-semibold text-[var(--caf-mute)]">
-                    Portfolio value over time
+                    Alpha Fund value over time
                   </h3>
                   <span className="text-xs text-[var(--caf-mute)]">actual dollars</span>
                 </div>
@@ -597,8 +597,8 @@ export default async function MarketingPage() {
         </h2>
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
           The Capital Alpha Substack is public writing about markets and
-          positions. Reading is for anyone. Being in the fund is separate and
-          only by invitation.
+          positions. Reading is for anyone. Being in the Alpha Fund is separate
+          and only by invitation.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <a
