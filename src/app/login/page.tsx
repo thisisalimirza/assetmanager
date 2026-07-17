@@ -25,7 +25,7 @@ export default async function LoginPage({
           </p>
           <p className="mt-3 text-sm leading-relaxed text-[var(--caf-mute)]">
             If you are a member looking up your balance, use the private link
-            Ali sent you. There is no member password.
+            you were sent. There is no member password.
           </p>
         </div>
         <form

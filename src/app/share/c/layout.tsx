@@ -19,7 +19,7 @@ export default function ClientShareLayout({ children }: { children: React.ReactN
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6">{children}</main>
       <footer className="mx-auto w-full max-w-3xl px-4 py-6 text-xs text-zinc-400 sm:px-6 print:hidden">
-        Private read-only view from Capital Alpha Fund. Questions? Ask Ali directly.
+        Private read-only view from Capital Alpha Fund. Questions? Ask directly.
       </footer>
     </div>
   );
