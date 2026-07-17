@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s · Capital Alpha Fund",
   },
   description:
-    "A private friends-and-family portfolio — invest alongside Ali, track your share, and see the same returns he does.",
+    "A private friends-and-family investment pool with unitized ownership, transparent books, and no fees — plus public notes on Capital Alpha.",
   metadataBase: new URL("https://capitalalphafund.com"),
 };
 
