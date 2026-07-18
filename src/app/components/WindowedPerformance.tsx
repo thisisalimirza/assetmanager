@@ -115,7 +115,7 @@ export function WindowedPerformance({
       </div>
 
       {alpha?.available ? (
-        <>
+        <div key={activeId} className="caf-window-swap">
           <div
             className={
               isMarketing
@@ -161,7 +161,7 @@ export function WindowedPerformance({
             investment performance. NAV is carried from the last mark on or before the start
             date. Past performance does not guarantee future results.
           </p>
-        </>
+        </div>
       ) : (
         <div
           className={

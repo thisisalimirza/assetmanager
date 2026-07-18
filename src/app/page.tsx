@@ -2,15 +2,13 @@ import Link from "next/link";
 import { getFundSummary } from "@/lib/portfolio";
 import { getPublicTrackRecordHref } from "@/lib/public-links";
 import { getAlphaWindows } from "@/lib/analytics";
-import {
-  formatCurrency,
-  formatSignedPercent,
-  formatDate,
-} from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { HeroPerformance } from "@/app/components/HeroPerformance";
 import { ValueChart } from "@/app/components/ValueChart";
 import { GoalProgress } from "@/app/components/GoalProgress";
 import { WindowedPerformance } from "@/app/components/WindowedPerformance";
+import { Reveal } from "@/app/components/Reveal";
+import { MarketingStats } from "@/app/components/MarketingStats";
 
 export const dynamic = "force-dynamic";
 
@@ -120,7 +118,7 @@ export default async function MarketingPage() {
       {/* —— Hero —— */}
       <section className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[var(--caf-ink)] text-[var(--caf-paper)]">
         <div
-          className="pointer-events-none absolute inset-0 opacity-90"
+          className="hero-aurora pointer-events-none absolute inset-[-10%] opacity-90"
           style={{
             background:
               "radial-gradient(120% 80% at 70% 20%, rgba(184,245,58,0.16), transparent 55%), radial-gradient(90% 70% at 10% 90%, rgba(26,64,52,0.9), transparent 50%), linear-gradient(165deg, #071410 0%, #0f2a22 48%, #071410 100%)",
@@ -134,17 +132,17 @@ export default async function MarketingPage() {
             Capital Alpha Fund
           </p>
           <nav className="flex flex-wrap items-center justify-end gap-4 text-sm text-[var(--caf-mist)] sm:gap-6">
-            <a href="#performance" className="transition-colors hover:text-white">
+            <a href="#performance" className="caf-nav-link hover:text-white">
               Performance
             </a>
-            <a href="#join" className="transition-colors hover:text-white">
+            <a href="#join" className="caf-nav-link hover:text-white">
               How to join
             </a>
             <a
               href={SUBSTACK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-colors hover:text-white"
+              className="caf-nav-link hover:text-white"
             >
               Writing
             </a>
@@ -167,18 +165,26 @@ export default async function MarketingPage() {
           <div className="marketing-rise marketing-rise-delay-3 mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
             <a
               href="#performance"
-              className="inline-flex items-center justify-center bg-[var(--caf-signal)] px-6 py-3 text-sm font-semibold text-[var(--caf-ink)] transition-transform hover:-translate-y-0.5"
+              className="caf-cta-primary is-live inline-flex items-center justify-center bg-[var(--caf-signal)] px-6 py-3 text-sm font-semibold text-[var(--caf-ink)]"
             >
               See performance
             </a>
             <a
               href="#join"
-              className="inline-flex items-center justify-center border border-[var(--caf-mist)]/40 px-6 py-3 text-sm font-medium text-[var(--caf-paper)] transition-colors hover:border-[var(--caf-signal)] hover:text-[var(--caf-signal)]"
+              className="inline-flex items-center justify-center border border-[var(--caf-mist)]/40 px-6 py-3 text-sm font-medium text-[var(--caf-paper)] transition-all hover:-translate-y-0.5 hover:border-[var(--caf-signal)] hover:text-[var(--caf-signal)]"
             >
               How to join
             </a>
           </div>
         </div>
+
+        <a
+          href="#performance"
+          className="hero-scroll-cue absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-[var(--caf-mist)] sm:flex"
+        >
+          <span>Scroll</span>
+          <span className="block h-8 w-px bg-[var(--caf-signal)]/70" aria-hidden />
+        </a>
       </section>
 
       {/* —— Performance first (prominent) —— */}
@@ -187,87 +193,66 @@ export default async function MarketingPage() {
         className="scroll-mt-8 border-b border-[var(--caf-mist)] bg-white px-5 py-16 sm:px-8 sm:py-24"
       >
         <div className="mx-auto max-w-6xl">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
-                Live track record
-              </p>
-              <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-[2.5rem]">
-                How the Alpha Fund is doing — versus the market.
-              </h2>
+          <Reveal>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
+                  Live track record
+                </p>
+                <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-[2.5rem]">
+                  How the Alpha Fund is doing — versus the market.
+                </h2>
+              </div>
+              <Link
+                href={trackRecordHref}
+                className="caf-cta-primary inline-flex items-center justify-center bg-[var(--caf-ink)] px-5 py-2.5 text-sm font-semibold text-[var(--caf-paper)]"
+              >
+                Full track record →
+              </Link>
             </div>
-            <Link
-              href={trackRecordHref}
-              className="inline-flex items-center justify-center bg-[var(--caf-ink)] px-5 py-2.5 text-sm font-semibold text-[var(--caf-paper)] transition-transform hover:-translate-y-0.5"
-            >
-              Full track record →
-            </Link>
-          </div>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--caf-mute)]">
-            Real numbers from the Alpha Fund. Use the filters to compare
-            against the S&amp;P 500 for YTD, recent windows, or the full record.
-            Past performance does not guarantee future results.
-          </p>
+            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--caf-mute)]">
+              Real numbers from the Alpha Fund. Use the filters to compare
+              against the S&amp;P 500 for YTD, recent windows, or the full record.
+              Past performance does not guarantee future results.
+            </p>
+          </Reveal>
 
-          <dl className="mt-10 grid gap-8 border-t border-[var(--caf-mist)] pt-10 grid-cols-1 sm:grid-cols-3">
-            <div>
-              <dt className="text-sm text-[var(--caf-mute)]">
-                {headline?.available && ytd?.available && headline === ytd
+          <Reveal delayMs={80}>
+            <MarketingStats
+              returnLabel={
+                headline?.available && ytd?.available && headline === ytd
                   ? "YTD NAV return"
-                  : "NAV return"}
-              </dt>
-              <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                {publicReturn != null ? formatSignedPercent(publicReturn) : "—"}
-              </dd>
-              <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                {headline?.available
+                  : "NAV return"
+              }
+              returnValue={publicReturn}
+              returnHint={
+                headline?.available
                   ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)} · per-unit return (deposits don’t count)`
                   : fund.auditedSince && fund.auditedTwr != null
                     ? `${formatDate(fund.auditedSince)} → ${fund.asOf ? formatDate(fund.asOf) : "now"} · per-unit since first audited mark`
-                    : "Time-weighted per-unit return"}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-[var(--caf-mute)]">Alpha Fund value</dt>
-              <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                {formatCurrency(fund.aum)}
-              </dd>
-              <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                Total dollars in the fund
-                {fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""} (size, not return).
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-[var(--caf-mute)]">
-                {headline?.available ? `vs ${headline.label}` : "Size goal"}
-              </dt>
-              <dd
-                className={
-                  "mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight " +
-                  (headline?.available
-                    ? headline.alpha >= 0
-                      ? "text-[var(--caf-signal-deep)]"
-                      : "text-red-700"
-                    : "")
-                }
-              >
-                {headline?.available
-                  ? formatSignedPercent(headline.alpha)
-                  : "$100,000"}
-              </dd>
-              <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                {headline?.available
+                    : "Time-weighted per-unit return"
+              }
+              aum={fund.aum}
+              aumHint={`Total dollars in the fund${fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""} (size, not return).`}
+              thirdLabel={headline?.available ? `vs ${headline.label}` : "Size goal"}
+              thirdValue={headline?.available ? headline.alpha : null}
+              thirdIsCurrencyGoal={!headline?.available}
+              thirdHint={
+                headline?.available
                   ? "Alpha — fund NAV return minus index return in that window"
-                  : "Public size target for the Alpha Fund"}
-              </dd>
-            </div>
-          </dl>
+                  : "Public size target for the Alpha Fund"
+              }
+              thirdPositive={headline?.available ? headline.alpha >= 0 : null}
+            />
+          </Reveal>
 
-          <div className="mt-12">
+          <Reveal delayMs={120} className="mt-12">
             {anyBenchmark ? (
-              <WindowedPerformance windows={windows} height={320} variant="marketing" />
+              <div className="caf-panel">
+                <WindowedPerformance windows={windows} height={320} variant="marketing" />
+              </div>
             ) : (
-              <div className="border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-8">
+              <div className="caf-panel border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-8">
                 <h3 className="font-display text-lg font-semibold">Fund value over time</h3>
                 <p className="mt-1 text-sm text-[var(--caf-mute)]">
                   Market comparison fills in when benchmark data is available.
@@ -281,103 +266,111 @@ export default async function MarketingPage() {
                 </div>
               </div>
             )}
-          </div>
+          </Reveal>
 
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
             {anyBenchmark && (
-              <div className="border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6">
-                <div className="mb-3 flex items-baseline justify-between gap-2">
-                  <h3 className="font-display text-sm font-semibold text-[var(--caf-mute)]">
-                    Fund value over time
-                  </h3>
-                  <span className="text-xs text-[var(--caf-mute)]">dollars in the account</span>
+              <Reveal delayMs={60}>
+                <div className="caf-panel border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6">
+                  <div className="mb-3 flex items-baseline justify-between gap-2">
+                    <h3 className="font-display text-sm font-semibold text-[var(--caf-mute)]">
+                      Fund value over time
+                    </h3>
+                    <span className="text-xs text-[var(--caf-mute)]">dollars in the account</span>
+                  </div>
+                  <ValueChart
+                    points={valuePoints}
+                    height={240}
+                    emptyHint="Valuations will appear here as the books are updated."
+                  />
+                  <p className="mt-3 text-xs leading-relaxed text-[var(--caf-mute)]">
+                    Account value rises with both market gains and new deposits — use NAV return
+                    above for performance vs the index.
+                  </p>
                 </div>
-                <ValueChart
-                  points={valuePoints}
-                  height={240}
-                  emptyHint="Valuations will appear here as the books are updated."
-                />
-                <p className="mt-3 text-xs leading-relaxed text-[var(--caf-mute)]">
-                  Account value rises with both market gains and new deposits — use NAV return
-                  above for performance vs the index.
-                </p>
-              </div>
+              </Reveal>
             )}
-            <div
-              className={
-                "border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6 " +
-                (anyBenchmark ? "" : "lg:col-span-2")
-              }
-            >
-              <GoalProgress
-                current={fund.aum}
-                asOf={fund.asOf ? formatDate(fund.asOf) : null}
-              />
-            </div>
+            <Reveal delayMs={120}>
+              <div
+                className={
+                  "caf-panel border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6 " +
+                  (anyBenchmark ? "" : "lg:col-span-2")
+                }
+              >
+                <GoalProgress
+                  current={fund.aum}
+                  asOf={fund.asOf ? formatDate(fund.asOf) : null}
+                />
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
 
       {/* —— What this is —— */}
       <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
-        <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
-          In plain English
-        </p>
-        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
-          This is the Alpha Fund.
-        </h2>
-        <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
-          <p>
-            Friends and family kept asking how they should invest. I am not a
-            licensed advisor, I cannot charge for managing money this way, and
-            running a separate account for every person was never realistic.
+        <Reveal>
+          <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
+            In plain English
           </p>
-          <p>
-            So people I already know can put money into{" "}
-            <strong className="font-semibold text-[var(--caf-ink)]">
-              the Alpha Fund
-            </strong>
-            . Everyone owns a share of it. When investments do well,
-            every share grows. When they do poorly, every share shrinks.
-          </p>
-          <p>
-            There is no app to download and no stock-picking homework for you.
-            You send money, it gets invested in the Alpha Fund, and you check your
-            share on a private link.
-          </p>
-        </div>
+          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+            This is the Alpha Fund.
+          </h2>
+          <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
+            <p>
+              Friends and family kept asking how they should invest. I am not a
+              licensed advisor, I cannot charge for managing money this way, and
+              running a separate account for every person was never realistic.
+            </p>
+            <p>
+              So people I already know can put money into{" "}
+              <strong className="font-semibold text-[var(--caf-ink)]">
+                the Alpha Fund
+              </strong>
+              . Everyone owns a share of it. When investments do well,
+              every share grows. When they do poorly, every share shrinks.
+            </p>
+            <p>
+              There is no app to download and no stock-picking homework for you.
+              You send money, it gets invested in the Alpha Fund, and you check your
+              share on a private link.
+            </p>
+          </div>
+        </Reveal>
       </section>
 
       {/* —— Why —— */}
       <section className="border-y border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-6xl">
-          <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
-            Why this exists
-          </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
-            Help people close to me — and build a real public track record.
-          </h2>
-          <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
-            <p>
-              Short term: friends and family get a clean way to benefit from the
-              same investment decisions without needing a personal advisor
-              relationship.
+          <Reveal>
+            <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
+              Why this exists
             </p>
-            <p>
-              Longer term: this site documents growing the Alpha Fund&apos;s{" "}
-              <strong className="font-semibold text-[var(--caf-ink)]">size</strong>
-              {" "}from a $1,000 marker toward $100,000, alongside a public{" "}
-              <strong className="font-semibold text-[var(--caf-ink)]">NAV track record</strong>
-              {" "}vs the market. Size and return are different numbers. If results
-              stay strong, that record is meant to support a possible future step
-              into a formal, licensed fund. That is a maybe — not a promise, and
-              not what this site is offering today.
-            </p>
-            <p>
-              For now, this stays free, informal, and limited to people who
-              already know me.
-            </p>
-          </div>
+            <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+              Help people close to me — and build a real public track record.
+            </h2>
+            <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
+              <p>
+                Short term: friends and family get a clean way to benefit from the
+                same investment decisions without needing a personal advisor
+                relationship.
+              </p>
+              <p>
+                Longer term: this site documents growing the Alpha Fund&apos;s{" "}
+                <strong className="font-semibold text-[var(--caf-ink)]">size</strong>
+                {" "}from a $1,000 marker toward $100,000, alongside a public{" "}
+                <strong className="font-semibold text-[var(--caf-ink)]">NAV track record</strong>
+                {" "}vs the market. Size and return are different numbers. If results
+                stay strong, that record is meant to support a possible future step
+                into a formal, licensed fund. That is a maybe — not a promise, and
+                not what this site is offering today.
+              </p>
+              <p>
+                For now, this stays free, informal, and limited to people who
+                already know me.
+              </p>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -386,59 +379,53 @@ export default async function MarketingPage() {
         id="join"
         className="scroll-mt-8 mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28"
       >
-        <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
-          How to join
-        </p>
-        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
-          Only if we already know each other — and you accept the terms.
-        </h2>
-        <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
-          There is no form on this website. If you do not already have a
-          personal way to reach me, this offer is not for you.
-        </p>
+        <Reveal>
+          <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
+            How to join
+          </p>
+          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+            Only if we already know each other — and you accept the terms.
+          </h2>
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
+            There is no form on this website. If you do not already have a
+            personal way to reach me, this offer is not for you.
+          </p>
+        </Reveal>
 
-        <ol className="mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          <li>
-            <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
-              Step 1
-            </span>
-            <h3 className="mt-3 font-display text-xl font-semibold">Reach out</h3>
-            <p className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              Text, call, or talk in person. Say you want to put money in. I
-              will tell you whether it is a fit and what comes next.
-            </p>
-          </li>
-          <li>
-            <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
-              Step 2
-            </span>
-            <h3 className="mt-3 font-display text-xl font-semibold">Review the terms</h3>
-            <p className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              Before any money moves, you will be asked to accept a short set of
-              terms so everyone is clear on risk, process, and privacy.
-            </p>
-          </li>
-          <li>
-            <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
-              Step 3
-            </span>
-            <h3 className="mt-3 font-display text-xl font-semibold">Send the money</h3>
-            <p className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              You will get exact instructions — usually a normal transfer you
-              already use. Wait for those before sending anything.
-            </p>
-          </li>
-          <li>
-            <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
-              Step 4
-            </span>
-            <h3 className="mt-3 font-display text-xl font-semibold">Get your private link</h3>
-            <p className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              Once the deposit is in and recorded, you get a personal link to
-              watch your share. Bookmark it — that is your access.
-            </p>
-          </li>
-        </ol>
+        <div className="mt-14 grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              step: "Step 1",
+              title: "Reach out",
+              body: "Text, call, or talk in person. Say you want to put money in. I will tell you whether it is a fit and what comes next.",
+            },
+            {
+              step: "Step 2",
+              title: "Review the terms",
+              body: "Before any money moves, you will be asked to accept a short set of terms so everyone is clear on risk, process, and privacy.",
+            },
+            {
+              step: "Step 3",
+              title: "Send the money",
+              body: "You will get exact instructions — usually a normal transfer you already use. Wait for those before sending anything.",
+            },
+            {
+              step: "Step 4",
+              title: "Get your private link",
+              body: "Once the deposit is in and recorded, you get a personal link to watch your share. Bookmark it — that is your access.",
+            },
+          ].map((item, i) => (
+            <Reveal key={item.step} delayMs={i * 70}>
+              <div className="caf-stat-tile">
+                <span className="font-display text-sm font-semibold text-[var(--caf-signal-deep)]">
+                  {item.step}
+                </span>
+                <h3 className="mt-3 font-display text-xl font-semibold">{item.title}</h3>
+                <p className="mt-2 leading-relaxed text-[var(--caf-mute)]">{item.body}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* —— Terms —— */}

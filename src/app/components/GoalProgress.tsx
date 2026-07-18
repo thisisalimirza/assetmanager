@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { formatCurrency } from "@/lib/format";
 
 /**
@@ -17,8 +20,35 @@ export function GoalProgress({
   asOf?: string | null;
 }) {
   const safeGoal = Math.max(goal, 1);
-  const pct = Math.min(100, Math.max(0, (current / safeGoal) * 100));
+  const targetPct = Math.min(100, Math.max(0, (current / safeGoal) * 100));
   const startPct = Math.min(100, Math.max(0, (start / safeGoal) * 100));
+  const barRef = useRef<HTMLDivElement>(null);
+  const [pct, setPct] = useState(0);
+  const [markerOn, setMarkerOn] = useState(false);
+
+  useEffect(() => {
+    const el = barRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPct(targetPct);
+      setMarkerOn(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          requestAnimationFrame(() => {
+            setPct(targetPct);
+            setTimeout(() => setMarkerOn(true), 700);
+          });
+          io.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [targetPct]);
 
   return (
     <div className="w-full">
@@ -27,7 +57,7 @@ export function GoalProgress({
           Fund size goal · $100k
         </p>
         <p className="text-sm text-[var(--caf-mute)]">
-          {pct.toFixed(1)}% of goal
+          {targetPct.toFixed(1)}% of goal
           {asOf ? ` · as of ${asOf}` : ""}
         </p>
       </div>
@@ -43,6 +73,7 @@ export function GoalProgress({
       </p>
 
       <div
+        ref={barRef}
         className="relative mt-8"
         role="progressbar"
         aria-valuemin={0}
@@ -50,13 +81,12 @@ export function GoalProgress({
         aria-valuenow={Math.round(current)}
         aria-label={`Fund size ${formatCurrency(current)} of ${formatCurrency(goal)} goal`}
       >
-        <div className="h-4 w-full bg-[var(--caf-mist)]">
+        <div className="h-4 w-full overflow-hidden bg-[var(--caf-mist)]">
           <div
-            className="h-full bg-[var(--caf-signal-deep)] transition-[width] duration-1000 ease-out"
+            className="goal-fill h-full bg-[var(--caf-signal-deep)]"
             style={{ width: `${pct}%` }}
           />
         </div>
-        {/* $1k starting marker */}
         <div
           className="absolute top-0 h-4 w-px bg-[var(--caf-ink)]/35"
           style={{ left: `${startPct}%` }}
@@ -64,7 +94,10 @@ export function GoalProgress({
           aria-hidden
         />
         <div
-          className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 border-2 border-[var(--caf-ink)] bg-[var(--caf-signal)]"
+          className={
+            "goal-marker absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 border-2 border-[var(--caf-ink)] bg-[var(--caf-signal)] " +
+            (markerOn ? "is-on" : "")
+          }
           style={{ left: `${pct}%` }}
           aria-hidden
         />
