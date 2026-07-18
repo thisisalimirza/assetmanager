@@ -16,6 +16,36 @@ export function niceTicks(min: number, max: number, count: number): number[] {
   return ticks;
 }
 
+/** Parse a calendar YYYY-MM-DD (or datetime) to UTC ms for chart spacing. */
+export function dateToMs(iso: string): number {
+  const day = iso.slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    return Date.parse(`${day}T00:00:00Z`);
+  }
+  const t = Date.parse(iso);
+  return Number.isFinite(t) ? t : 0;
+}
+
+/**
+ * Map a date onto [x0, x1] by calendar time between the series endpoints.
+ * Falls back to equal index spacing when dates are missing or identical.
+ */
+export function xAtTime(
+  dates: string[],
+  index: number,
+  x0: number,
+  x1: number,
+): number {
+  if (dates.length < 2) return (x0 + x1) / 2;
+  const t0 = dateToMs(dates[0]);
+  const t1 = dateToMs(dates[dates.length - 1]);
+  if (!(t1 > t0)) {
+    return x0 + (index / (dates.length - 1)) * (x1 - x0);
+  }
+  const t = dateToMs(dates[index]);
+  return x0 + ((t - t0) / (t1 - t0)) * (x1 - x0);
+}
+
 /** Evenly-spaced indices into an array of length n, for x-axis date labels. */
 export function pickLabelIndices(n: number, count: number): number[] {
   if (n <= count) return Array.from({ length: n }, (_, i) => i);

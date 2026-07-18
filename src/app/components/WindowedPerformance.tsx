@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { AlphaWindow, AlphaWindowId } from "@/lib/analytics";
+import { BENCHMARK_DETAIL } from "@/lib/benchmark";
 import { formatSignedPercent, formatDate } from "@/lib/format";
 import { ComparisonChart } from "./ComparisonChart";
 
@@ -118,12 +119,12 @@ export function WindowedPerformance({
           <div
             className={
               isMarketing
-                ? "mb-6 grid grid-cols-3 gap-4 border-t border-[var(--caf-mist)] pt-6"
-                : "mb-4 grid grid-cols-3 gap-4"
+                ? "mb-6 grid grid-cols-1 gap-4 border-t border-[var(--caf-mist)] pt-6 sm:grid-cols-3"
+                : "mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3"
             }
           >
             <Stat
-              label="Fund NAV"
+              label="Fund return"
               value={formatSignedPercent(alpha.fundReturn)}
               tone={alpha.fundReturn >= 0 ? "pos" : "neg"}
               marketing={isMarketing}
@@ -144,7 +145,7 @@ export function WindowedPerformance({
           <ComparisonChart
             series={alpha.series}
             benchmarkLabel={alpha.label}
-            primaryLabel="Capital Alpha"
+            primaryLabel="Alpha Fund"
             height={height}
           />
           <p
@@ -154,9 +155,9 @@ export function WindowedPerformance({
                 : "mt-2 text-xs text-zinc-400"
             }
           >
-            Time-weighted per-unit (NAV) return vs the {alpha.label} over the same calendar
-            window — the fair comparison to an index. This is not the % change in total
-            dollars in the account; deposits and withdrawals move that balance without being
+            Time-weighted per-unit (NAV) return vs the {alpha.label} ({BENCHMARK_DETAIL}) over
+            the same calendar window — the fair comparison to an index. This is not the %
+            change in total dollars in the account; deposits raise that balance without being
             investment performance. NAV is carried from the last mark on or before the start
             date. Past performance does not guarantee future results.
           </p>

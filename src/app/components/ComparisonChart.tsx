@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { niceTicks, pickLabelIndices } from "@/lib/chart";
+import { niceTicks, pickLabelIndices, xAtTime } from "@/lib/chart";
 import { formatDate, formatSignedPercent, formatCurrency } from "@/lib/format";
 
 type Point = { date: string; fund: number; benchmark: number | null };
@@ -17,6 +17,8 @@ const AXIS_H = 20;
  *   rendered as % return from the anchor. Used for the fund vs benchmark.
  * - "currency": series values are raw dollar amounts, rendered as-is. Used
  *   for a client's real value vs a hypothetical same-cashflow benchmark value.
+ *
+ * X positions are calendar-time based so multi-month gaps are not compressed.
  */
 export function ComparisonChart({
   series,
@@ -37,7 +39,7 @@ export function ComparisonChart({
 
   if (series.length < 2) {
     return (
-      <div className="flex items-center justify-center text-sm text-zinc-400" style={{ height }}>
+      <div className="flex items-center justify-center text-sm text-zinc-500" style={{ height }}>
         Record more valuations over time to chart performance vs {benchmarkLabel}.
       </div>
     );
@@ -52,8 +54,11 @@ export function ComparisonChart({
         }))
       : series;
 
-  const formatAxis = (v: number) => (mode === "currency" ? formatCurrency(v) : `${v > 0 ? "+" : ""}${v.toFixed(0)}%`);
-  const formatTooltip = (v: number) => (mode === "currency" ? formatCurrency(v) : formatSignedPercent(v / 100));
+  const dates = pts.map((p) => p.date);
+  const formatAxis = (v: number) =>
+    mode === "currency" ? formatCurrency(v) : `${v > 0 ? "+" : ""}${v.toFixed(0)}%`;
+  const formatTooltip = (v: number) =>
+    mode === "currency" ? formatCurrency(v) : formatSignedPercent(v / 100);
 
   const plotW = WIDTH - axisW - PAD_X;
   const plotH = height - AXIS_H - PAD_Y;
@@ -66,7 +71,7 @@ export function ComparisonChart({
   const hiBound = Math.max(max, ticks[ticks.length - 1]);
   const range = hiBound - loBound || 1;
 
-  const x = (i: number) => axisW + (i / (pts.length - 1)) * plotW;
+  const x = (i: number) => xAtTime(dates, i, axisW, axisW + plotW);
   const y = (v: number) => PAD_Y + (1 - (v - loBound) / range) * plotH;
 
   const fundLine = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.fund).toFixed(1)}`).join(" ");
@@ -110,7 +115,7 @@ export function ComparisonChart({
     <div className="relative">
       <div className="mb-2 flex items-center gap-4 text-xs">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-3 rounded-sm bg-emerald-500" /> {primaryLabel}
+          <span className="inline-block h-2 w-3 rounded-sm bg-emerald-600" /> {primaryLabel}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2 w-3 rounded-sm bg-zinc-400" /> {benchmarkLabel}
@@ -121,11 +126,11 @@ export function ComparisonChart({
         viewBox={`0 0 ${WIDTH} ${height}`}
         className="w-full cursor-crosshair"
         style={{ height }}
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
         onMouseMove={(e) => handleMove(e.clientX)}
         onMouseLeave={() => setHover(null)}
+        onTouchStart={(e) => e.touches[0] && handleMove(e.touches[0].clientX)}
         onTouchMove={(e) => e.touches[0] && handleMove(e.touches[0].clientX)}
-        onTouchEnd={() => setHover(null)}
       >
         {ticks.map((t, i) => (
           <g key={i}>
@@ -135,14 +140,18 @@ export function ComparisonChart({
               y1={y(t)}
               y2={y(t)}
               className={
-                mode === "percent" && t === 0
-                  ? "stroke-zinc-300 dark:stroke-zinc-700"
-                  : "stroke-zinc-200 dark:stroke-zinc-800"
+                mode === "percent" && t === 0 ? "stroke-zinc-300" : "stroke-zinc-200"
               }
               strokeWidth={1}
               strokeDasharray={mode === "percent" && t === 0 ? "4 4" : undefined}
             />
-            <text x={axisW - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-zinc-400 text-[10px]">
+            <text
+              x={axisW - 8}
+              y={y(t)}
+              textAnchor="end"
+              dominantBaseline="middle"
+              className="fill-zinc-400 text-[10px]"
+            >
               {formatAxis(t)}
             </text>
           </g>
@@ -161,9 +170,22 @@ export function ComparisonChart({
         ))}
 
         {benchRuns.map((p, i) => (
-          <polyline key={i} points={p} fill="none" className="stroke-zinc-400" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+          <polyline
+            key={i}
+            points={p}
+            fill="none"
+            className="stroke-zinc-400"
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+          />
         ))}
-        <polyline points={fundLine} fill="none" className="stroke-emerald-500" strokeWidth={2.5} vectorEffect="non-scaling-stroke" />
+        <polyline
+          points={fundLine}
+          fill="none"
+          className="stroke-emerald-600"
+          strokeWidth={2.5}
+          vectorEffect="non-scaling-stroke"
+        />
 
         {hp && hover != null && (
           <g>
@@ -172,19 +194,21 @@ export function ComparisonChart({
               x2={x(hover)}
               y1={PAD_Y}
               y2={PAD_Y + plotH}
-              className="stroke-zinc-400 dark:stroke-zinc-600"
+              className="stroke-zinc-400"
               strokeWidth={1}
               strokeDasharray="3 3"
             />
-            <circle cx={x(hover)} cy={y(hp.fund)} r={4} className="fill-emerald-500" />
-            {hp.benchmark != null && <circle cx={x(hover)} cy={y(hp.benchmark)} r={4} className="fill-zinc-400" />}
+            <circle cx={x(hover)} cy={y(hp.fund)} r={4} className="fill-emerald-600" />
+            {hp.benchmark != null && (
+              <circle cx={x(hover)} cy={y(hp.benchmark)} r={4} className="fill-zinc-400" />
+            )}
           </g>
         )}
       </svg>
 
       {hp && (
         <div
-          className="pointer-events-none absolute top-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+          className="pointer-events-none absolute top-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs shadow-sm"
           style={
             tooltipAlignRight
               ? { right: `${100 - tooltipLeftPct}%`, marginRight: 8 }
@@ -192,7 +216,7 @@ export function ComparisonChart({
           }
         >
           <div className="text-zinc-400">{formatDate(hp.date)}</div>
-          <div className="font-medium tabular-nums text-emerald-600 dark:text-emerald-400">
+          <div className="font-medium tabular-nums text-emerald-700">
             {primaryLabel} {formatTooltip(hp.fund)}
           </div>
           {hp.benchmark != null && (

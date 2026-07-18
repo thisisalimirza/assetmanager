@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { niceTicks, pickLabelIndices } from "@/lib/chart";
+import { useId, useRef, useState } from "react";
+import { niceTicks, pickLabelIndices, xAtTime } from "@/lib/chart";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 type Point = { date: string; value: number };
@@ -9,8 +9,8 @@ type Point = { date: string; value: number };
 const WIDTH = 720;
 const PAD_X = 12;
 const PAD_Y = 14;
-const AXIS_W = 64; // reserved space on the left for y-axis labels
-const AXIS_H = 20; // reserved space at the bottom for x-axis labels
+const AXIS_W = 64;
+const AXIS_H = 20;
 
 export function ValueChart({
   points,
@@ -22,11 +22,12 @@ export function ValueChart({
   height?: number;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const gradId = useId();
   const [hover, setHover] = useState<number | null>(null);
 
   if (points.length < 2) {
     return (
-      <div className="flex items-center justify-center text-sm text-zinc-400" style={{ height }}>
+      <div className="flex h-[220px] items-center justify-center text-sm text-zinc-500" style={{ height }}>
         {emptyHint}
       </div>
     );
@@ -34,6 +35,7 @@ export function ValueChart({
 
   const plotW = WIDTH - AXIS_W - PAD_X;
   const plotH = height - AXIS_H - PAD_Y;
+  const dates = points.map((p) => p.date);
   const values = points.map((p) => p.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -42,7 +44,7 @@ export function ValueChart({
   const hiBound = Math.max(max, ticks[ticks.length - 1]);
   const range = hiBound - loBound || 1;
 
-  const x = (i: number) => AXIS_W + (i / (points.length - 1)) * plotW;
+  const x = (i: number) => xAtTime(dates, i, AXIS_W, AXIS_W + plotW);
   const y = (v: number) => PAD_Y + (1 - (v - loBound) / range) * plotH;
 
   const line = points.map((p, i) => `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
@@ -79,20 +81,19 @@ export function ValueChart({
         viewBox={`0 0 ${WIDTH} ${height}`}
         className="w-full cursor-crosshair"
         style={{ height }}
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid meet"
         onMouseMove={(e) => handleMove(e.clientX)}
         onMouseLeave={() => setHover(null)}
+        onTouchStart={(e) => e.touches[0] && handleMove(e.touches[0].clientX)}
         onTouchMove={(e) => e.touches[0] && handleMove(e.touches[0].clientX)}
-        onTouchEnd={() => setHover(null)}
       >
         <defs>
-          <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="currentColor" stopOpacity="0.22" />
             <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
           </linearGradient>
         </defs>
 
-        {/* gridlines + y-axis labels */}
         {ticks.map((t, i) => (
           <g key={i}>
             <line
@@ -100,16 +101,21 @@ export function ValueChart({
               x2={WIDTH - PAD_X}
               y1={y(t)}
               y2={y(t)}
-              className="stroke-zinc-200 dark:stroke-zinc-800"
+              className="stroke-zinc-200"
               strokeWidth={1}
             />
-            <text x={AXIS_W - 8} y={y(t)} textAnchor="end" dominantBaseline="middle" className="fill-zinc-400 text-[10px]">
+            <text
+              x={AXIS_W - 8}
+              y={y(t)}
+              textAnchor="end"
+              dominantBaseline="middle"
+              className="fill-zinc-400 text-[10px]"
+            >
               {formatCurrency(t)}
             </text>
           </g>
         ))}
 
-        {/* x-axis date labels */}
         {labelIdx.map((i) => (
           <text
             key={i}
@@ -122,9 +128,15 @@ export function ValueChart({
           </text>
         ))}
 
-        <g className="text-emerald-600 dark:text-emerald-400">
-          <polygon points={area} fill="url(#areaFill)" stroke="none" />
-          <polyline points={line} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+        <g className="text-emerald-700">
+          <polygon points={area} fill={`url(#${gradId})`} stroke="none" />
+          <polyline
+            points={line}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+          />
         </g>
 
         {hp && hover != null && (
@@ -134,18 +146,18 @@ export function ValueChart({
               x2={x(hover)}
               y1={PAD_Y}
               y2={PAD_Y + plotH}
-              className="stroke-zinc-400 dark:stroke-zinc-600"
+              className="stroke-zinc-400"
               strokeWidth={1}
               strokeDasharray="3 3"
             />
-            <circle cx={x(hover)} cy={y(hp.value)} r={4} className="fill-emerald-600 dark:fill-emerald-400" />
+            <circle cx={x(hover)} cy={y(hp.value)} r={4} className="fill-emerald-700" />
           </g>
         )}
       </svg>
 
       {hp && (
         <div
-          className="pointer-events-none absolute top-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+          className="pointer-events-none absolute top-1 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs shadow-sm"
           style={
             tooltipAlignRight
               ? { right: `${100 - tooltipLeftPct}%`, marginRight: 8 }

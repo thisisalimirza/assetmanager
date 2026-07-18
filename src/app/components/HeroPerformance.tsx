@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { xAtTime } from "@/lib/chart";
 
 type Point = { date: string; value: number };
 
 /**
  * Full-bleed SVG of the fund's real NAV-per-unit path — the product itself as
- * the hero visual, not a stock photo.
+ * the hero visual. Points are spaced by calendar time.
  */
 export function HeroPerformance({ points }: { points: Point[] }) {
   const gradId = useId();
@@ -19,6 +20,7 @@ export function HeroPerformance({ points }: { points: Point[] }) {
 
   if (points.length < 2) return null;
 
+  const dates = points.map((p) => p.date);
   const values = points.map((p) => p.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -30,7 +32,7 @@ export function HeroPerformance({ points }: { points: Point[] }) {
   const padY = 48;
 
   const coords = points.map((p, i) => {
-    const x = padX + (i / (points.length - 1)) * (w - padX * 2);
+    const x = xAtTime(dates, i, padX, w - padX);
     const y = padY + (1 - (p.value - min) / range) * (h - padY * 2);
     return [x, y] as const;
   });

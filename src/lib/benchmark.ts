@@ -12,7 +12,9 @@ import { getDb } from "./db";
 // Fetched server-side and cached in benchmark_prices so we don't hit the
 // network (or its daily rate limit) on every render.
 export const BENCHMARK_SYMBOL = "SPY";
+/** Shown in UI — SPY price return as a practical S&P 500 proxy (not total return). */
 export const BENCHMARK_LABEL = "S&P 500";
+export const BENCHMARK_DETAIL = "SPY price return";
 
 const ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query";
 

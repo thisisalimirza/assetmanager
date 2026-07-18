@@ -30,8 +30,11 @@ export default async function DashboardPage() {
     getAlpha(),
     getAlphaWindows(),
   ]);
-  const chartPoints = fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }));
-  const inception = fund.navSeries[0]?.date ?? null;
+  const chartPoints = fund.navSeries
+    .filter((p) => !fund.auditedSince || p.date >= fund.auditedSince)
+    .map((p) => ({ date: p.date, value: p.fundValue }));
+  const inception = fund.auditedSince ?? fund.navSeries[0]?.date ?? null;
+  const performance = fund.auditedTwr ?? fund.twr;
   const rankedClients = [...fund.clients].sort((a, b) => b.currentValue - a.currentValue);
   const staleDays = fund.asOf ? daysAgo(fund.asOf) : null;
   const isStale = staleDays != null && staleDays > STALE_DAYS;
@@ -88,9 +91,9 @@ export default async function DashboardPage() {
           hint={`on ${formatCurrency(fund.totalCostBasis)} invested`}
         />
         <StatCard
-          label="Performance since inception"
-          value={formatSignedPercent(fund.twr)}
-          tone={fund.twr >= 0 ? "positive" : "negative"}
+          label="NAV return (audited)"
+          value={formatSignedPercent(performance)}
+          tone={performance >= 0 ? "positive" : "negative"}
           hint={`${inception ? `from ${formatDate(inception)} · ` : ""}${formatSignedPercent(fund.simpleReturn)} money-weighted`}
         />
         <StatCard label="NAV per unit" value={formatCurrency(fund.navPerUnit)} hint={`${fund.totalUnits.toFixed(2)} units`} />

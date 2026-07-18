@@ -20,7 +20,19 @@ export function formatUnits(value: number): string {
   return value.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 }
 
+/** Format a calendar date without timezone day-shift (YYYY-MM-DD → UTC noon). */
 export function formatDate(value: string): string {
-  const d = new Date(value.includes("T") ? value : `${value}T00:00:00`);
+  const day = value.trim().slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    const d = new Date(`${day}T12:00:00Z`);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  }
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }

@@ -43,7 +43,11 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What is the $1,000 → $100,000 goal?",
-    a: "The public goal is to grow the Alpha Fund from a $1,000 starting marker toward $100,000 in actual value. The meter on this page uses the real fund total, and the live charts are part of that public track record.",
+    a: "That is a public fund-size goal: grow the Alpha Fund’s actual value toward $100,000 (it started from a $1,000 marker). The meter shows how large the fund is today — including money people have added — not how much the investments have returned. For investment performance, use the NAV return vs the S&P 500 above.",
+  },
+  {
+    q: "Why doesn’t “account up X%” match the YTD return?",
+    a: "Deposits raise the total dollars in the fund without counting as investment return. We report time-weighted per-unit (NAV) return so it can be compared fairly to the S&P 500 — the same way a mutual fund does.",
   },
   {
     q: "What if I want more money in later?",
@@ -85,18 +89,31 @@ export default async function MarketingPage() {
     getPublicTrackRecordHref(),
   ]);
 
-  // Prefer YTD for the headline strip; fall back to all-time, then TWR.
+  // Prefer YTD for the headline strip; fall back to audited all-time.
   const ytd = windows.find((w) => w.id === "ytd")?.alpha;
   const all = windows.find((w) => w.id === "all")?.alpha;
   const headline = ytd?.available ? ytd : all?.available ? all : null;
   const anyBenchmark = windows.some((w) => w.alpha.available);
 
-  const chartPoints = trimFlatSeedEra(
-    dedupeNavSeries(fund.navSeries.map((p) => ({ date: p.date, value: p.navPerUnit }))),
+  // Charts start at the first audited valuation — never the flat seed-NAV era
+  // (which made the hero path look like +75% instead of ~+45%).
+  const seriesStart = fund.auditedSince;
+  const chartPoints = dedupeNavSeries(
+    fund.navSeries
+      .filter((p) => !seriesStart || p.date >= seriesStart)
+      .map((p) => ({ date: p.date, value: p.navPerUnit })),
   );
-  const valuePoints = trimFlatSeedEra(
-    dedupeNavSeries(fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }))),
+  const valuePoints = dedupeNavSeries(
+    fund.navSeries
+      .filter((p) => !seriesStart || p.date >= seriesStart)
+      .map((p) => ({ date: p.date, value: p.fundValue })),
   );
+  const publicReturn =
+    headline?.available
+      ? headline.fundReturn
+      : all?.available
+        ? all.fundReturn
+        : fund.auditedTwr;
 
   return (
     <div className="bg-[var(--caf-paper)] text-[var(--caf-ink)]">
@@ -192,7 +209,7 @@ export default async function MarketingPage() {
             Past performance does not guarantee future results.
           </p>
 
-          <dl className="mt-10 grid gap-8 border-t border-[var(--caf-mist)] pt-10 sm:grid-cols-3">
+          <dl className="mt-10 grid gap-8 border-t border-[var(--caf-mist)] pt-10 grid-cols-1 sm:grid-cols-3">
             <div>
               <dt className="text-sm text-[var(--caf-mute)]">
                 {headline?.available && ytd?.available && headline === ytd
@@ -200,17 +217,13 @@ export default async function MarketingPage() {
                   : "NAV return"}
               </dt>
               <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
-                {formatSignedPercent(
-                  headline?.available
-                    ? headline.fundReturn
-                    : (all?.available ? all.fundReturn : fund.twr),
-                )}
+                {publicReturn != null ? formatSignedPercent(publicReturn) : "—"}
               </dd>
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
                 {headline?.available
-                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)} · per-unit, not account-dollar change`
-                  : all?.available
-                    ? `${formatDate(all.anchorDate)} → ${formatDate(all.asOf)} · per-unit since first audited mark`
+                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)} · per-unit return (deposits don’t count)`
+                  : fund.auditedSince && fund.auditedTwr != null
+                    ? `${formatDate(fund.auditedSince)} → ${fund.asOf ? formatDate(fund.asOf) : "now"} · per-unit since first audited mark`
                     : "Time-weighted per-unit return"}
               </dd>
             </div>
@@ -220,18 +233,22 @@ export default async function MarketingPage() {
                 {formatCurrency(fund.aum)}
               </dd>
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
-                Actual value of the Alpha Fund
-                {fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""}.
+                Total dollars in the fund
+                {fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""} (size, not return).
               </dd>
             </div>
             <div>
               <dt className="text-sm text-[var(--caf-mute)]">
-                {headline?.available ? `vs ${headline.label}` : "Public goal"}
+                {headline?.available ? `vs ${headline.label}` : "Size goal"}
               </dt>
               <dd
                 className={
                   "mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight " +
-                  (headline?.available ? "text-[var(--caf-signal-deep)]" : "")
+                  (headline?.available
+                    ? headline.alpha >= 0
+                      ? "text-[var(--caf-signal-deep)]"
+                      : "text-red-700"
+                    : "")
                 }
               >
                 {headline?.available
@@ -240,8 +257,8 @@ export default async function MarketingPage() {
               </dd>
               <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">
                 {headline?.available
-                  ? "Alpha — how much we beat or trailed the market in that window"
-                  : "Grow the Alpha Fund from a $1,000 marker toward $100k"}
+                  ? "Alpha — fund NAV return minus index return in that window"
+                  : "Public size target for the Alpha Fund"}
               </dd>
             </div>
           </dl>
@@ -271,15 +288,19 @@ export default async function MarketingPage() {
               <div className="border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-6">
                 <div className="mb-3 flex items-baseline justify-between gap-2">
                   <h3 className="font-display text-sm font-semibold text-[var(--caf-mute)]">
-                    Alpha Fund value over time
+                    Fund value over time
                   </h3>
-                  <span className="text-xs text-[var(--caf-mute)]">actual dollars</span>
+                  <span className="text-xs text-[var(--caf-mute)]">dollars in the account</span>
                 </div>
                 <ValueChart
                   points={valuePoints}
                   height={240}
                   emptyHint="Valuations will appear here as the books are updated."
                 />
+                <p className="mt-3 text-xs leading-relaxed text-[var(--caf-mute)]">
+                  Account value rises with both market gains and new deposits — use NAV return
+                  above for performance vs the index.
+                </p>
               </div>
             )}
             <div
@@ -343,14 +364,14 @@ export default async function MarketingPage() {
               relationship.
             </p>
             <p>
-              Longer term: this site documents growing the Alpha Fund from a{" "}
-              <strong className="font-semibold text-[var(--caf-ink)]">$1,000</strong>
-              {" "}marker toward{" "}
-              <strong className="font-semibold text-[var(--caf-ink)]">$100,000</strong>
-              {" "}in public. If results stay strong, that record is meant to
-              support a possible future step into a formal, licensed fund. That
-              is a maybe — not a promise, and not what this site is offering
-              today.
+              Longer term: this site documents growing the Alpha Fund&apos;s{" "}
+              <strong className="font-semibold text-[var(--caf-ink)]">size</strong>
+              {" "}from a $1,000 marker toward $100,000, alongside a public{" "}
+              <strong className="font-semibold text-[var(--caf-ink)]">NAV track record</strong>
+              {" "}vs the market. Size and return are different numbers. If results
+              stay strong, that record is meant to support a possible future step
+              into a formal, licensed fund. That is a maybe — not a promise, and
+              not what this site is offering today.
             </p>
             <p>
               For now, this stays free, informal, and limited to people who
@@ -539,9 +560,17 @@ export default async function MarketingPage() {
           <div>
             <dt className="font-display text-lg font-semibold">Alpha</dt>
             <dd className="mt-2 leading-relaxed text-[var(--caf-mute)]">
-              The gap between the Alpha Fund&apos;s return and the market&apos;s
-              return over the same period. Positive means better than the
+              The gap between the Alpha Fund&apos;s NAV return and the S&amp;P 500
+              (SPY price) over the same period. Positive means better than the
               yardstick; negative means worse.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-display text-lg font-semibold">Fund value vs NAV return</dt>
+            <dd className="mt-2 leading-relaxed text-[var(--caf-mute)]">
+              Fund value is total dollars in the account. NAV return is how each
+              share performed. Adding money raises fund value; it does not raise
+              NAV return.
             </dd>
           </div>
         </dl>
@@ -689,12 +718,6 @@ export default async function MarketingPage() {
             >
               Writing →
             </a>
-            <Link
-              href="/login"
-              className="text-[var(--caf-mute)] underline-offset-4 hover:underline"
-            >
-              Books login
-            </Link>
           </div>
         </div>
       </footer>
@@ -705,19 +728,7 @@ export default async function MarketingPage() {
 function dedupeNavSeries(points: { date: string; value: number }[]) {
   const byDate = new Map<string, number>();
   for (const p of points) byDate.set(p.date, p.value);
-  return [...byDate.entries()].map(([date, value]) => ({ date, value }));
-}
-
-function trimFlatSeedEra(points: { date: string; value: number }[]) {
-  if (points.length < 3) return points;
-  const first = points[0].value;
-  let start = 0;
-  for (let i = 1; i < points.length; i++) {
-    if (Math.abs(points[i].value - first) / Math.max(first, 1) < 0.02) {
-      start = i;
-    } else {
-      break;
-    }
-  }
-  return points.slice(Math.max(0, start));
+  return [...byDate.entries()]
+    .map(([date, value]) => ({ date, value }))
+    .sort((a, b) => a.date.localeCompare(b.date));
 }

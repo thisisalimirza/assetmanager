@@ -106,9 +106,21 @@ export async function FundTrackRecord() {
         <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <StatCard
             label="Fund performance (time-weighted)"
-            value={formatSignedPercent(fund.twr)}
-            tone={fund.twr >= 0 ? "positive" : "negative"}
-            hint="since inception"
+            value={
+              fund.auditedTwr != null ? formatSignedPercent(fund.auditedTwr) : "—"
+            }
+            tone={
+              fund.auditedTwr == null
+                ? undefined
+                : fund.auditedTwr >= 0
+                  ? "positive"
+                  : "negative"
+            }
+            hint={
+              fund.auditedSince
+                ? `since first audited valuation — ${formatDate(fund.auditedSince)}`
+                : "awaiting first audited valuation"
+            }
           />
           <p className="mt-3 text-sm text-zinc-400">
             {alpha.available === false ? alpha.reason : "Benchmark comparison unavailable."}

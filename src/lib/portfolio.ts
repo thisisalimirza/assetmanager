@@ -56,7 +56,12 @@ export type FundSummary = {
   totalCostBasis: number;
   totalProfit: number;
   simpleReturn: number; // money-weighted: total profit / total invested (matches broker "all-time")
-  twr: number; // time-weighted return since inception (pure per-unit performance)
+  /** Per-unit return vs seed NAV (100). Can include flat pre-audit era — prefer auditedTwr in public UI. */
+  twr: number;
+  /** Per-unit return since the first standalone valuation, or null if none yet. */
+  auditedTwr: number | null;
+  /** Date of the first standalone valuation used for auditedTwr. */
+  auditedSince: string | null;
   asOf: string | null;
   clients: ClientSummary[];
   navSeries: NavPoint[];
@@ -640,6 +645,29 @@ export async function getFundSummary(): Promise<FundSummary> {
   const totalProfit = ledger.currentFundValue - totalCostBasis;
   const twr = ledger.navPerUnit / SEED_NAV - 1;
 
+  // Public/track-record performance should start at the first audited mark, not
+  // the flat seed-NAV era (which inflates "since inception" to look like +75%).
+  let auditedTwr: number | null = null;
+  let auditedSince: string | null = null;
+  if (valuations.length > 0 && ledger.navPerUnit > 0) {
+    auditedSince = valuations.reduce(
+      (min, v) => (v.date < min ? v.date : min),
+      valuations[0].date,
+    );
+    let navAtAudit: number | null = null;
+    for (const p of ledger.navSeries) {
+      if (p.date <= auditedSince) navAtAudit = p.navPerUnit;
+      if (p.date === auditedSince) break;
+    }
+    if (navAtAudit == null) {
+      const forward = ledger.navSeries.find((p) => p.date >= auditedSince!);
+      navAtAudit = forward?.navPerUnit ?? null;
+    }
+    if (navAtAudit != null && navAtAudit > 0) {
+      auditedTwr = ledger.navPerUnit / navAtAudit - 1;
+    }
+  }
+
   return {
     aum: ledger.currentFundValue,
     totalUnits: ledger.totalUnits,
@@ -648,6 +676,8 @@ export async function getFundSummary(): Promise<FundSummary> {
     totalProfit,
     simpleReturn: totalCostBasis > 0 ? totalProfit / totalCostBasis : 0,
     twr,
+    auditedTwr,
+    auditedSince,
     asOf: ledger.asOf,
     clients: clientSummaries,
     navSeries: ledger.navSeries,
