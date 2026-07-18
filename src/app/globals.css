@@ -184,17 +184,6 @@ body {
 .goal-fill {
   transition: width 1.15s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.goal-marker {
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.4);
-  transition:
-    opacity 0.35s ease,
-    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.goal-marker.is-on {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
-}
 
 .caf-stat-tile {
   transition:
@@ -253,7 +242,6 @@ body {
     transition: none;
   }
   .goal-fill,
-  .goal-marker,
   .caf-stat-tile,
   .caf-panel,
   .caf-cta-primary,
@@ -261,9 +249,5 @@ body {
   .caf-window-swap {
     transition: none;
     animation: none;
-  }
-  .goal-marker {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
   }
 }

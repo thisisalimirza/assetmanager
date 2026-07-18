@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getFundSummary } from "@/lib/portfolio";
 import { getPublicTrackRecordHref } from "@/lib/public-links";
-import { getAlphaWindows } from "@/lib/analytics";
+import { getAlpha, getAlphaWindows } from "@/lib/analytics";
 import { formatDate } from "@/lib/format";
 import { HeroPerformance } from "@/app/components/HeroPerformance";
 import { ValueChart } from "@/app/components/ValueChart";
@@ -81,20 +81,21 @@ const TERMS: { title: string; body: string }[] = [
 ];
 
 export default async function MarketingPage() {
-  const [fund, windows, trackRecordHref] = await Promise.all([
+  // Same production data path as the internal dashboard (/app):
+  // getFundSummary + getAlpha + getAlphaWindows.
+  const [fund, alpha, windows, trackRecordHref] = await Promise.all([
     getFundSummary(),
+    getAlpha(),
     getAlphaWindows(),
     getPublicTrackRecordHref(),
   ]);
 
-  // Prefer YTD for the headline strip; fall back to audited all-time.
-  const ytd = windows.find((w) => w.id === "ytd")?.alpha;
+  // Headline matches dashboard "NAV return (audited)" / All window — not YTD.
   const all = windows.find((w) => w.id === "all")?.alpha;
-  const headline = ytd?.available ? ytd : all?.available ? all : null;
-  const anyBenchmark = windows.some((w) => w.alpha.available);
+  const headline = alpha.available ? alpha : all?.available ? all : null;
+  const anyBenchmark = windows.some((w) => w.alpha.available) || alpha.available;
 
-  // Charts start at the first audited valuation — never the flat seed-NAV era
-  // (which made the hero path look like +75% instead of ~+45%).
+  // Charts start at the first audited valuation — same filter as /app dashboard.
   const seriesStart = fund.auditedSince;
   const chartPoints = dedupeNavSeries(
     fund.navSeries
@@ -109,9 +110,7 @@ export default async function MarketingPage() {
   const publicReturn =
     headline?.available
       ? headline.fundReturn
-      : all?.available
-        ? all.fundReturn
-        : fund.auditedTwr;
+      : fund.auditedTwr;
 
   return (
     <div className="bg-[var(--caf-paper)] text-[var(--caf-ink)]">
@@ -211,35 +210,32 @@ export default async function MarketingPage() {
               </Link>
             </div>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--caf-mute)]">
-              Real numbers from the Alpha Fund. Use the filters to compare
-              against the S&amp;P 500 for YTD, recent windows, or the full record.
-              Past performance does not guarantee future results.
+              Live numbers from the same production books as the internal
+              dashboard. Defaults to the full audited record vs the S&amp;P 500 —
+              switch windows to compare YTD or recent periods. Past performance
+              does not guarantee future results.
             </p>
           </Reveal>
 
           <Reveal delayMs={80}>
             <MarketingStats
-              returnLabel={
-                headline?.available && ytd?.available && headline === ytd
-                  ? "YTD NAV return"
-                  : "NAV return"
-              }
+              returnLabel="NAV return (audited)"
               returnValue={publicReturn}
               returnHint={
                 headline?.available
-                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)} · per-unit return (deposits don’t count)`
+                  ? `${formatDate(headline.anchorDate)} → ${formatDate(headline.asOf)} · same books as the internal dashboard`
                   : fund.auditedSince && fund.auditedTwr != null
                     ? `${formatDate(fund.auditedSince)} → ${fund.asOf ? formatDate(fund.asOf) : "now"} · per-unit since first audited mark`
                     : "Time-weighted per-unit return"
               }
               aum={fund.aum}
-              aumHint={`Total dollars in the fund${fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""} (size, not return).`}
+              aumHint={`Assets under management${fund.asOf ? ` as of ${formatDate(fund.asOf)}` : ""} (size, not return).`}
               thirdLabel={headline?.available ? `vs ${headline.label}` : "Size goal"}
               thirdValue={headline?.available ? headline.alpha : null}
               thirdIsCurrencyGoal={!headline?.available}
               thirdHint={
                 headline?.available
-                  ? "Alpha — fund NAV return minus index return in that window"
+                  ? "Alpha since first audited valuation — same figure as /app"
                   : "Public size target for the Alpha Fund"
               }
               thirdPositive={headline?.available ? headline.alpha >= 0 : null}
@@ -249,7 +245,12 @@ export default async function MarketingPage() {
           <Reveal delayMs={120} className="mt-12">
             {anyBenchmark ? (
               <div className="caf-panel">
-                <WindowedPerformance windows={windows} height={320} variant="marketing" />
+                <WindowedPerformance
+                  windows={windows}
+                  height={320}
+                  variant="marketing"
+                  defaultWindow="all"
+                />
               </div>
             ) : (
               <div className="caf-panel border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-8">

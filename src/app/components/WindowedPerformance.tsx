@@ -15,17 +15,21 @@ export function WindowedPerformance({
   height = 300,
   variant = "marketing",
   framed = true,
+  defaultWindow = "all",
 }: {
   windows: AlphaWindow[];
   height?: number;
   variant?: "marketing" | "app";
   /** When false, skip the outer card chrome (for nesting inside another panel). */
   framed?: boolean;
+  /** Preferred window when available (marketing + dashboard default to All). */
+  defaultWindow?: AlphaWindowId;
 }) {
   const available = windows.filter((w) => w.alpha.available);
   const defaultId: AlphaWindowId =
-    available.find((w) => w.id === "ytd")?.id ??
+    available.find((w) => w.id === defaultWindow)?.id ??
     available.find((w) => w.id === "all")?.id ??
+    available.find((w) => w.id === "ytd")?.id ??
     available[0]?.id ??
     "all";
 

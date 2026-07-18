@@ -5,8 +5,8 @@ import { formatCurrency } from "@/lib/format";
 
 /**
  * Visual for the public $1k → $100k size goal using the Alpha Fund's actual
- * AUM. Linear scale only — log scales made ~$12k look "halfway" to $100k.
- * This is a fund-size goal, not a return figure.
+ * AUM. Linear scale only. Marker is anchored to the fill tip so it cannot
+ * drift out of alignment during the width animation.
  */
 export function GoalProgress({
   start = 1_000,
@@ -24,23 +24,18 @@ export function GoalProgress({
   const startPct = Math.min(100, Math.max(0, (start / safeGoal) * 100));
   const barRef = useRef<HTMLDivElement>(null);
   const [pct, setPct] = useState(0);
-  const [markerOn, setMarkerOn] = useState(false);
 
   useEffect(() => {
     const el = barRef.current;
     if (!el) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setPct(targetPct);
-      setMarkerOn(true);
       return;
     }
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          requestAnimationFrame(() => {
-            setPct(targetPct);
-            setTimeout(() => setMarkerOn(true), 700);
-          });
+          requestAnimationFrame(() => setPct(targetPct));
           io.disconnect();
         }
       },
@@ -81,26 +76,26 @@ export function GoalProgress({
         aria-valuenow={Math.round(current)}
         aria-label={`Fund size ${formatCurrency(current)} of ${formatCurrency(goal)} goal`}
       >
-        <div className="h-4 w-full overflow-hidden bg-[var(--caf-mist)]">
+        {/* Track */}
+        <div className="relative h-4 w-full bg-[var(--caf-mist)]">
+          {/* Fill — marker lives on the tip so left% and width can never disagree */}
           <div
-            className="goal-fill h-full bg-[var(--caf-signal-deep)]"
+            className="goal-fill relative h-full bg-[var(--caf-signal-deep)]"
             style={{ width: `${pct}%` }}
+          >
+            <span
+              className="absolute top-1/2 right-0 h-5 w-5 translate-x-1/2 -translate-y-1/2 border-2 border-[var(--caf-ink)] bg-[var(--caf-signal)]"
+              aria-hidden
+            />
+          </div>
+          {/* $1k starting marker */}
+          <div
+            className="pointer-events-none absolute top-0 h-4 w-px bg-[var(--caf-ink)]/35"
+            style={{ left: `${startPct}%` }}
+            title={`${formatCurrency(start)} starting marker`}
+            aria-hidden
           />
         </div>
-        <div
-          className="absolute top-0 h-4 w-px bg-[var(--caf-ink)]/35"
-          style={{ left: `${startPct}%` }}
-          title={`${formatCurrency(start)} starting marker`}
-          aria-hidden
-        />
-        <div
-          className={
-            "goal-marker absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 border-2 border-[var(--caf-ink)] bg-[var(--caf-signal)] " +
-            (markerOn ? "is-on" : "")
-          }
-          style={{ left: `${pct}%` }}
-          aria-hidden
-        />
       </div>
 
       <div className="mt-3 flex justify-between font-display text-sm font-semibold">
