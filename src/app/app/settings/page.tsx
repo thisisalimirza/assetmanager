@@ -24,8 +24,8 @@ export default async function SettingsPage() {
         <SectionHeader>Sharing</SectionHeader>
         <div className="flex flex-col gap-3">
           <ShareLinkCard
-            title="Public track record link"
-            description="A read-only page for prospective investors: time-weighted performance vs the S&P and the trading record. Client names are never shown."
+            title="Shareable track record link"
+            description="The public track record prospects see (also linked from the marketing site). Client names are never shown. Revoking kills this URL."
             path={fundShareToken ? `/share/f/${fundShareToken}` : null}
             createAction={createFundShareLink}
             revokeAction={revokeFundShareLink}
@@ -89,7 +89,7 @@ export default async function SettingsPage() {
                 before/after snapshots — the paper trail behind every balance.
               </p>
             </div>
-            <Link href="/audit" className={buttonStyles.secondary}>
+            <Link href="/app/audit" className={buttonStyles.secondary}>
               View audit trail
             </Link>
           </div>

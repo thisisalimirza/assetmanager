@@ -1,8 +1,11 @@
-# Portfolio Tracker
+# Capital Alpha Fund
 
-A lean webapp for a small independent advisor / fund manager to track and manage
-investments across multiple clients (including yourself), replacing a
-spreadsheet workflow. It models:
+Public marketing site for **capitalalphafund.com**, plus the private portal used
+to track a friends-and-family portfolio. The root (`/`) is the marketing page;
+the advisor tools live under `/app`. Share links stay at `/share/*`.
+
+The portal tracks investments across multiple clients (including yourself),
+replacing a spreadsheet workflow. It models:
 
 - **Clients** — everyone with money in the fund (you and the people whose money
   you manage), with optional contact details for statements.
@@ -104,10 +107,10 @@ The same drop-a-CSV pattern works on the Reconcile page (Venmo/bank exports).
   plain on-disk SQLite file won't survive there. Locally, the same
   `@libsql/client` talks to a file on disk, so no external service is needed for
   development.
-- **Auth** — a single shared password (see env vars below) protects the whole
-  app via middleware; there's no multi-user system. The only exception is
-  `/share/*`: read-only pages gated by their own secret per-link tokens (see
-  "Read-only sharing" above).
+- **Auth** — a single shared password (see env vars below) protects `/app/*`
+  and `/api/*` via Next.js proxy; there's no multi-user system. Public paths are
+  `/` (marketing), `/login`, and `/share/*` (read-only pages gated by their own
+  secret per-link tokens — see "Read-only sharing" above).
 
 ## Environment variables
 

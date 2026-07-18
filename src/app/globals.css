@@ -3,12 +3,23 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Capital Alpha Fund brand */
+  --caf-ink: #071410;
+  --caf-forest: #0f2a22;
+  --caf-moss: #1a4034;
+  --caf-signal: #b8f53a;
+  --caf-signal-deep: #2f6b14;
+  --caf-paper: #f2f5f3;
+  --caf-mist: #d7e3dc;
+  --caf-mute: #5a6e63;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -22,5 +33,237 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-manrope), ui-sans-serif, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-outfit), var(--font-manrope), ui-sans-serif, sans-serif;
+}
+
+/* --- Marketing motion --- */
+
+@keyframes caf-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes caf-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes caf-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2%, 3%, 0) scale(1.04);
+  }
+}
+
+@keyframes caf-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+@keyframes caf-pulse-soft {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(184, 245, 58, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(184, 245, 58, 0);
+  }
+}
+
+.marketing-rise {
+  opacity: 0;
+  animation: caf-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.marketing-rise-delay-1 {
+  animation-delay: 0.12s;
+}
+.marketing-rise-delay-2 {
+  animation-delay: 0.24s;
+}
+.marketing-rise-delay-3 {
+  animation-delay: 0.38s;
+}
+.marketing-rise-delay-4 {
+  animation-delay: 0.52s;
+}
+
+.hero-chart-stroke {
+  transition: stroke-dashoffset 1.8s cubic-bezier(0.22, 1, 0.36, 1) 0.35s;
+}
+
+.hero-chart-fill {
+  opacity: 0;
+  transition: opacity 1.2s ease 1.1s;
+}
+.hero-chart-fill.is-ready {
+  opacity: 1;
+}
+
+.hero-aurora {
+  animation: caf-drift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-scroll-cue {
+  animation: caf-bob 2.2s ease-in-out infinite;
+}
+
+.caf-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.caf-reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.caf-cta-primary {
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.2s ease;
+}
+.caf-cta-primary:hover {
+  transform: translateY(-3px);
+}
+.caf-cta-primary:active {
+  transform: translateY(-1px);
+}
+.caf-cta-primary.is-live {
+  animation: caf-pulse-soft 2.8s ease-out infinite;
+}
+
+.caf-nav-link {
+  position: relative;
+  transition: color 0.2s ease;
+}
+.caf-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.caf-nav-link:hover::after,
+.caf-nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.goal-fill {
+  transition: width 1.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.goal-marker {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.goal-marker.is-on {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.caf-stat-tile {
+  transition:
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 0.25s ease;
+}
+.caf-stat-tile:hover {
+  transform: translateY(-2px);
+  background-color: rgba(242, 245, 243, 0.7);
+}
+
+.caf-panel {
+  transition:
+    border-color 0.25s ease,
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.caf-panel:hover {
+  border-color: rgba(7, 20, 16, 0.28);
+}
+
+@keyframes caf-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.caf-window-swap {
+  animation: caf-swap-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-rise {
+    opacity: 1;
+    animation: none;
+  }
+  .hero-chart-stroke {
+    transition: none;
+    stroke-dashoffset: 0 !important;
+  }
+  .hero-chart-fill {
+    opacity: 1;
+    transition: none;
+  }
+  .hero-aurora,
+  .hero-scroll-cue,
+  .caf-cta-primary.is-live {
+    animation: none;
+  }
+  .caf-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .goal-fill,
+  .goal-marker,
+  .caf-stat-tile,
+  .caf-panel,
+  .caf-cta-primary,
+  .caf-nav-link::after,
+  .caf-window-swap {
+    transition: none;
+    animation: none;
+  }
+  .goal-marker {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }

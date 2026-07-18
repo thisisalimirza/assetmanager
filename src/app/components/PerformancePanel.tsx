@@ -1,24 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import type { Alpha } from "@/lib/analytics";
+import type { Alpha, AlphaWindow } from "@/lib/analytics";
 import { formatSignedPercent, formatDate } from "@/lib/format";
 import { ValueChart } from "./ValueChart";
-import { ComparisonChart } from "./ComparisonChart";
+import { WindowedPerformance } from "./WindowedPerformance";
 
 /**
- * The dashboard's single performance card: one place to look, with two tabs —
- * the fund's dollar value over time, and its time-weighted return vs the
- * benchmark. Replaces two stacked full-width chart cards.
+ * The dashboard's single performance card: fund value over time, or
+ * filterable time-weighted return vs the benchmark.
  */
 export function PerformancePanel({
   points,
   alpha,
+  windows,
 }: {
   points: { date: string; value: number }[];
   alpha: Alpha;
+  windows?: AlphaWindow[];
 }) {
   const [tab, setTab] = useState<"value" | "benchmark">("value");
+  const hasWindows = Boolean(windows?.some((w) => w.alpha.available));
 
   const tabClass = (active: boolean) =>
     "rounded-md px-3 py-1 text-sm transition-colors " +
@@ -41,7 +43,7 @@ export function PerformancePanel({
             vs {alpha.label}
           </button>
         </div>
-        {tab === "benchmark" && alpha.available && (
+        {tab === "benchmark" && alpha.available && !hasWindows && (
           <span className="text-xs text-zinc-400">
             since first audited valuation — {formatDate(alpha.anchorDate)}
           </span>
@@ -55,6 +57,8 @@ export function PerformancePanel({
             Total market value of the fund at each valuation and transaction.
           </p>
         </>
+      ) : hasWindows && windows ? (
+        <WindowedPerformance windows={windows} height={220} variant="app" framed={false} />
       ) : alpha.available ? (
         <>
           <div className="mb-4 grid grid-cols-3 gap-4">
@@ -66,12 +70,9 @@ export function PerformancePanel({
             <PanelStat label={alpha.label} value={formatSignedPercent(alpha.benchmarkReturn)} muted />
             <PanelStat label="Alpha" value={formatSignedPercent(alpha.alpha)} positive={alpha.alpha >= 0} />
           </div>
-          <ComparisonChart series={alpha.series} benchmarkLabel={alpha.label} />
           <p className="mt-2 text-xs text-zinc-400">
             Time-weighted return vs the {alpha.label}, measured from the first audited valuation
-            ({formatDate(alpha.anchorDate)}) — earlier history has no market marks to compare
-            against, which is why this differs from the since-inception figure above. Alpha is how
-            much you beat (or trailed) simply holding the index.
+            ({formatDate(alpha.anchorDate)}).
           </p>
         </>
       ) : (

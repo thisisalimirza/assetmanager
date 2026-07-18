@@ -21,7 +21,7 @@ export default async function TransactionsPage() {
         subtitle={
           <>
             All deposits and withdrawals across clients. Every change is kept in the{" "}
-            <Link href="/audit" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
+            <Link href="/app/audit" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
               audit trail
             </Link>
             .
@@ -37,7 +37,7 @@ export default async function TransactionsPage() {
       {clients.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 p-10 text-center text-sm text-zinc-500 dark:border-zinc-700">
           Add a{" "}
-          <Link href="/clients" className="underline">
+          <Link href="/app/clients" className="underline">
             client
           </Link>{" "}
           before recording transactions.
@@ -67,7 +67,7 @@ export default async function TransactionsPage() {
                 <tr key={t.id} className="border-t border-zinc-200 dark:border-zinc-800">
                   <td className="px-4 py-2.5 tabular-nums">{formatDate(t.date)}</td>
                   <td className="px-4 py-2.5">
-                    <Link href={`/clients/${t.clientId}`} className="font-medium hover:underline">
+                    <Link href={`/app/clients/${t.clientId}`} className="font-medium hover:underline">
                       {clientName.get(t.clientId) ?? "—"}
                     </Link>
                   </td>

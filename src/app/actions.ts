@@ -37,10 +37,11 @@ function optionalNumber(formData: FormData, key: string): number | null {
 
 function revalidateAll(clientId?: number) {
   revalidatePath("/");
-  revalidatePath("/clients");
-  revalidatePath("/transactions");
-  revalidatePath("/valuations");
-  if (clientId != null) revalidatePath(`/clients/${clientId}`);
+  revalidatePath("/app");
+  revalidatePath("/app/clients");
+  revalidatePath("/app/transactions");
+  revalidatePath("/app/valuations");
+  if (clientId != null) revalidatePath(`/app/clients/${clientId}`);
 }
 
 // State returned to forms via useActionState so errors render inline instead of
@@ -80,7 +81,7 @@ export async function login(formData: FormData) {
     path: "/",
     maxAge: 60 * 60 * 24 * 30,
   });
-  redirect("/");
+  redirect("/app");
 }
 
 export async function logout() {
@@ -119,7 +120,7 @@ export async function editClient(_prev: FormState, formData: FormData): Promise<
 export async function removeClient(formData: FormData) {
   await portfolio.deleteClient(requireNumber(formData, "id"));
   revalidateAll();
-  redirect("/clients");
+  redirect("/app/clients");
 }
 
 // --- transactions ---
@@ -212,17 +213,17 @@ export async function revokeClientShareLink(formData: FormData) {
 
 export async function createFundShareLink() {
   await portfolio.setFundShareToken(generateShareToken());
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
 }
 
 export async function revokeFundShareLink() {
   await portfolio.setFundShareToken(null);
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
 }
 
 export async function setPublicDollars(formData: FormData) {
   await portfolio.setPublicShowDollars(String(formData.get("value")) === "1");
-  revalidatePath("/settings");
+  revalidatePath("/app/settings");
 }
 
 // --- brokerage activity import ---
@@ -287,7 +288,7 @@ export async function importActivitiesAction(
 
   try {
     const result = await portfolio.importActivities(rows);
-    revalidatePath("/activity");
+    revalidatePath("/app/activity");
     return { ok: true, ...result };
   } catch {
     return { error: "Import failed — nothing was saved. Try again." };
@@ -303,5 +304,5 @@ export async function reconcileTransactions(formData: FormData) {
     .filter((n) => Number.isInteger(n) && n > 0);
   await portfolio.markTransactionsReconciled(ids);
   revalidateAll();
-  revalidatePath("/reconcile");
+  revalidatePath("/app/reconcile");
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getFundSummary, listClients } from "@/lib/portfolio";
-import { getAlpha } from "@/lib/analytics";
+import { getAlpha, getAlphaWindows } from "@/lib/analytics";
 import {
   formatCurrency,
   formatSignedCurrency,
@@ -24,9 +24,17 @@ function daysAgo(dateIso: string): number {
 }
 
 export default async function DashboardPage() {
-  const [fund, clients, alpha] = await Promise.all([getFundSummary(), listClients(), getAlpha()]);
-  const chartPoints = fund.navSeries.map((p) => ({ date: p.date, value: p.fundValue }));
-  const inception = fund.navSeries[0]?.date ?? null;
+  const [fund, clients, alpha, windows] = await Promise.all([
+    getFundSummary(),
+    listClients(),
+    getAlpha(),
+    getAlphaWindows(),
+  ]);
+  const chartPoints = fund.navSeries
+    .filter((p) => !fund.auditedSince || p.date >= fund.auditedSince)
+    .map((p) => ({ date: p.date, value: p.fundValue }));
+  const inception = fund.auditedSince ?? fund.navSeries[0]?.date ?? null;
+  const performance = fund.auditedTwr ?? fund.twr;
   const rankedClients = [...fund.clients].sort((a, b) => b.currentValue - a.currentValue);
   const staleDays = fund.asOf ? daysAgo(fund.asOf) : null;
   const isStale = staleDays != null && staleDays > STALE_DAYS;
@@ -83,9 +91,9 @@ export default async function DashboardPage() {
           hint={`on ${formatCurrency(fund.totalCostBasis)} invested`}
         />
         <StatCard
-          label="Performance since inception"
-          value={formatSignedPercent(fund.twr)}
-          tone={fund.twr >= 0 ? "positive" : "negative"}
+          label="NAV return (audited)"
+          value={formatSignedPercent(performance)}
+          tone={performance >= 0 ? "positive" : "negative"}
           hint={`${inception ? `from ${formatDate(inception)} · ` : ""}${formatSignedPercent(fund.simpleReturn)} money-weighted`}
         />
         <StatCard label="NAV per unit" value={formatCurrency(fund.navPerUnit)} hint={`${fund.totalUnits.toFixed(2)} units`} />
@@ -93,13 +101,13 @@ export default async function DashboardPage() {
 
       <div>
         <SectionHeader>Performance</SectionHeader>
-        <PerformancePanel points={chartPoints} alpha={alpha} />
+        <PerformancePanel points={chartPoints} alpha={alpha} windows={windows} />
       </div>
 
       <div>
         <SectionHeader
           right={
-            <Link href="/clients" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
+            <Link href="/app/clients" className="text-sm text-emerald-600 hover:underline dark:text-emerald-400">
               Manage clients →
             </Link>
           }
@@ -122,7 +130,7 @@ export default async function DashboardPage() {
               {rankedClients.map((c) => (
                 <tr key={c.id} className="border-t border-zinc-200 dark:border-zinc-800">
                   <td className="px-4 py-2.5 font-medium">
-                    <Link href={`/clients/${c.id}`} className="hover:underline">
+                    <Link href={`/app/clients/${c.id}`} className="hover:underline">
                       {c.name}
                     </Link>
                   </td>
