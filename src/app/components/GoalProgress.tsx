@@ -47,8 +47,8 @@ export function GoalProgress({
 
   return (
     <div className="w-full">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
+      <div className="flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-3">
+        <p className="font-display text-xs font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)] sm:text-sm">
           Fund size goal · $100k
         </p>
         <p className="text-sm text-[var(--caf-mute)]">
@@ -57,9 +57,9 @@ export function GoalProgress({
         </p>
       </div>
 
-      <p className="mt-4 font-display text-3xl font-semibold tabular-nums tracking-tight sm:text-4xl">
+      <p className="mt-4 font-display text-2xl font-semibold tabular-nums tracking-tight sm:text-4xl">
         {formatCurrency(current)}
-        <span className="ml-2 text-lg font-medium text-[var(--caf-mute)]">
+        <span className="ml-2 text-base font-medium text-[var(--caf-mute)] sm:text-lg">
           of {formatCurrency(goal)}
         </span>
       </p>
@@ -98,9 +98,12 @@ export function GoalProgress({
         </div>
       </div>
 
-      <div className="mt-3 flex justify-between font-display text-sm font-semibold">
+      <div className="mt-3 flex justify-between gap-2 font-display text-xs font-semibold sm:text-sm">
         <span>{formatCurrency(0)}</span>
-        <span className="text-[var(--caf-mute)]">{formatCurrency(start)} start</span>
+        <span className="text-center text-[var(--caf-mute)]">
+          <span className="sm:hidden">{formatCurrency(start)}</span>
+          <span className="hidden sm:inline">{formatCurrency(start)} start</span>
+        </span>
         <span>{formatCurrency(goal)}</span>
       </div>
     </div>

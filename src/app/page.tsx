@@ -9,6 +9,7 @@ import { GoalProgress } from "@/app/components/GoalProgress";
 import { WindowedPerformance } from "@/app/components/WindowedPerformance";
 import { Reveal } from "@/app/components/Reveal";
 import { MarketingStats } from "@/app/components/MarketingStats";
+import { MarketingNav } from "@/app/components/MarketingNav";
 
 export const dynamic = "force-dynamic";
 
@@ -126,51 +127,31 @@ export default async function MarketingPage() {
         <HeroPerformance points={chartPoints} />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--caf-ink)] via-[var(--caf-ink)]/55 to-transparent" />
 
-        <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
-          <p className="font-display text-sm font-semibold tracking-[0.08em] uppercase text-[var(--caf-signal)]">
-            Capital Alpha Fund
-          </p>
-          <nav className="flex flex-wrap items-center justify-end gap-4 text-sm text-[var(--caf-mist)] sm:gap-6">
-            <a href="#performance" className="caf-nav-link hover:text-white">
-              Performance
-            </a>
-            <a href="#join" className="caf-nav-link hover:text-white">
-              How to join
-            </a>
-            <a
-              href={SUBSTACK_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="caf-nav-link hover:text-white"
-            >
-              Writing
-            </a>
-          </nav>
-        </header>
+        <MarketingNav />
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-12 pt-8 sm:justify-end sm:px-8 sm:pb-20 sm:pt-24">
-          <p className="marketing-rise font-display text-[clamp(2.25rem,6.5vw,4.75rem)] font-semibold leading-[1.1] tracking-[-0.02em]">
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 pb-16 pt-6 sm:justify-end sm:px-8 sm:pb-20 sm:pt-24">
+          <p className="marketing-rise font-display text-[clamp(2.5rem,11vw,4.75rem)] font-semibold leading-[1.05] tracking-[-0.02em]">
             Capital
             <br />
             Alpha Fund
           </p>
-          <h1 className="marketing-rise marketing-rise-delay-1 mt-5 max-w-lg font-display text-xl font-medium leading-snug text-[#b8f53a] sm:mt-6 sm:text-2xl">
+          <h1 className="marketing-rise marketing-rise-delay-1 mt-4 max-w-lg font-display text-lg font-medium leading-snug text-[#b8f53a] sm:mt-6 sm:text-2xl">
             Put money beside people you trust — without needing to pick stocks.
           </h1>
-          <p className="marketing-rise marketing-rise-delay-2 mt-3 max-w-xl text-base text-[#d7e3dc] sm:mt-4 sm:text-xl">
+          <p className="marketing-rise marketing-rise-delay-2 mt-3 max-w-xl text-base leading-relaxed text-[#d7e3dc] sm:mt-4 sm:text-xl">
             An invite-only Alpha Fund for close friends and family — clear
             tracking, no charge, by design.
           </p>
-          <div className="marketing-rise marketing-rise-delay-3 mt-6 flex flex-wrap items-center gap-3 sm:mt-8">
+          <div className="marketing-rise marketing-rise-delay-3 mt-6 flex w-full flex-col gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
             <a
               href="#performance"
-              className="caf-cta-primary is-live inline-flex items-center justify-center bg-[var(--caf-signal)] px-6 py-3 text-sm font-semibold text-[var(--caf-ink)]"
+              className="caf-cta-primary is-live inline-flex w-full items-center justify-center bg-[var(--caf-signal)] px-6 py-3.5 text-sm font-semibold text-[var(--caf-ink)] sm:w-auto sm:py-3"
             >
               See performance
             </a>
             <a
               href="#join"
-              className="inline-flex items-center justify-center border border-[var(--caf-mist)]/40 px-6 py-3 text-sm font-medium text-[var(--caf-paper)] transition-all hover:-translate-y-0.5 hover:border-[var(--caf-signal)] hover:text-[var(--caf-signal)]"
+              className="inline-flex w-full items-center justify-center border border-[var(--caf-mist)]/40 px-6 py-3.5 text-sm font-medium text-[var(--caf-paper)] transition-all hover:-translate-y-0.5 hover:border-[var(--caf-signal)] hover:text-[var(--caf-signal)] sm:w-auto sm:py-3"
             >
               How to join
             </a>
@@ -179,37 +160,37 @@ export default async function MarketingPage() {
 
         <a
           href="#performance"
-          className="hero-scroll-cue absolute bottom-6 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-[var(--caf-mist)] sm:flex"
+          className="hero-scroll-cue absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[10px] tracking-[0.18em] uppercase text-[var(--caf-mist)] sm:bottom-6 sm:text-[11px]"
         >
           <span>Scroll</span>
-          <span className="block h-8 w-px bg-[var(--caf-signal)]/70" aria-hidden />
+          <span className="block h-6 w-px bg-[var(--caf-signal)]/70 sm:h-8" aria-hidden />
         </a>
       </section>
 
       {/* —— Performance first (prominent) —— */}
       <section
         id="performance"
-        className="scroll-mt-8 border-b border-[var(--caf-mist)] bg-white px-5 py-16 sm:px-8 sm:py-24"
+        className="scroll-mt-6 border-b border-[var(--caf-mist)] bg-white px-4 py-12 sm:scroll-mt-8 sm:px-8 sm:py-24"
       >
         <div className="mx-auto max-w-6xl">
           <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <p className="font-display text-xs font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)] sm:text-sm">
                   Live track record
                 </p>
-                <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-snug sm:text-[2.5rem]">
+                <h2 className="mt-2 max-w-2xl font-display text-2xl font-semibold leading-snug sm:mt-3 sm:text-3xl sm:text-[2.5rem]">
                   How the Alpha Fund is doing — versus the market.
                 </h2>
               </div>
               <Link
                 href={trackRecordHref}
-                className="caf-cta-primary inline-flex items-center justify-center bg-[var(--caf-ink)] px-5 py-2.5 text-sm font-semibold text-[var(--caf-paper)]"
+                className="caf-cta-primary inline-flex w-full items-center justify-center bg-[var(--caf-ink)] px-5 py-3 text-sm font-semibold text-[var(--caf-paper)] sm:w-auto sm:py-2.5"
               >
                 Full track record →
               </Link>
             </div>
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-[var(--caf-mute)]">
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--caf-mute)] sm:text-lg">
               Live numbers from the same production books as the internal
               dashboard. Defaults to the full audited record vs the S&amp;P 500 —
               switch windows to compare YTD or recent periods. Past performance
@@ -247,7 +228,7 @@ export default async function MarketingPage() {
               <div className="caf-panel">
                 <WindowedPerformance
                   windows={windows}
-                  height={320}
+                  height={260}
                   variant="marketing"
                   defaultWindow="all"
                 />
@@ -309,12 +290,12 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— What this is —— */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-8 sm:py-28">
         <Reveal>
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             In plain English
           </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+          <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
             This is the Alpha Fund.
           </h2>
           <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -341,13 +322,13 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— Why —— */}
-      <section className="border-y border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28">
+      <section className="border-y border-[var(--caf-mist)] bg-white px-4 py-14 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
               Why this exists
             </p>
-            <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+            <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
               Help people close to me — and build a real public track record.
             </h2>
             <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -378,13 +359,13 @@ export default async function MarketingPage() {
       {/* —— How to join —— */}
       <section
         id="join"
-        className="scroll-mt-8 mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28"
+        className="scroll-mt-6 mx-auto max-w-6xl px-4 py-14 sm:scroll-mt-8 sm:px-8 sm:py-28"
       >
         <Reveal>
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             How to join
           </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+          <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
             Only if we already know each other — and you accept the terms.
           </h2>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -432,13 +413,13 @@ export default async function MarketingPage() {
       {/* —— Terms —— */}
       <section
         id="terms"
-        className="scroll-mt-8 border-y border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28"
+        className="scroll-mt-6 border-y border-[var(--caf-mist)] bg-white px-4 py-14 sm:scroll-mt-8 sm:px-8 sm:py-28"
       >
         <div className="mx-auto max-w-6xl">
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             Terms everyone accepts
           </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+          <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
             Same page before any money moves.
           </h2>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -460,11 +441,11 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— Money out —— */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-8 sm:py-28">
         <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           Getting money back out
         </p>
-        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+        <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
           Want to cash out? Just ask. There is no ATM button.
         </h2>
         <div className="mt-6 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -484,12 +465,12 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— What you see —— */}
-      <section className="border-y border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28">
+      <section className="border-y border-[var(--caf-mist)] bg-white px-4 py-14 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             Keeping track
           </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+          <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
             Your private link shows only your money.
           </h2>
           <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -513,11 +494,11 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— Glossary —— */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-8 sm:py-28">
         <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           Words you might hear
         </p>
-        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+        <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
           A tiny glossary — no quiz later.
         </h2>
         <dl className="mt-12 grid gap-10 sm:grid-cols-2">
@@ -565,12 +546,12 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— Risks —— */}
-      <section className="border-y border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28">
+      <section className="border-y border-[var(--caf-mist)] bg-white px-4 py-14 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-6xl">
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             Please read this
           </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+          <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
             Honest limits — said upfront.
           </h2>
           <ul className="mt-8 max-w-xl space-y-4 text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -611,11 +592,11 @@ export default async function MarketingPage() {
       </section>
 
       {/* —— Writing —— */}
-      <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
+      <section className="mx-auto max-w-6xl px-4 py-14 sm:px-8 sm:py-28">
         <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
           Public notes
         </p>
-        <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+        <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
           Want to follow the thinking? That part is free and public.
         </h2>
         <p className="mt-4 max-w-xl text-lg leading-relaxed text-[var(--caf-mute)]">
@@ -644,13 +625,13 @@ export default async function MarketingPage() {
       {/* —— FAQ —— */}
       <section
         id="questions"
-        className="scroll-mt-8 border-t border-[var(--caf-mist)] bg-white px-5 py-20 sm:px-8 sm:py-28"
+        className="scroll-mt-6 border-t border-[var(--caf-mist)] bg-white px-4 py-14 sm:scroll-mt-8 sm:px-8 sm:py-28"
       >
         <div className="mx-auto max-w-6xl">
           <p className="font-display text-sm font-semibold tracking-[0.06em] uppercase text-[var(--caf-mute)]">
             Common questions
           </p>
-          <h2 className="mt-3 max-w-xl font-display text-3xl font-semibold leading-snug sm:text-[2.35rem]">
+          <h2 className="mt-3 max-w-xl font-display text-2xl font-semibold leading-snug sm:text-3xl sm:text-[2.35rem]">
             Still wondering about something?
           </h2>
           <div className="mt-10 max-w-2xl divide-y divide-[var(--caf-mist)] border-y border-[var(--caf-mist)]">
@@ -678,23 +659,23 @@ export default async function MarketingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--caf-mist)] px-5 py-10 text-sm text-[var(--caf-mute)] sm:px-8">
+      <footer className="border-t border-[var(--caf-mist)] px-4 py-8 text-sm text-[var(--caf-mute)] sm:px-8 sm:py-10">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="font-display text-base font-semibold text-[var(--caf-ink)]">
               Capital Alpha Fund
             </p>
-            <p className="mt-2 max-w-xl leading-relaxed">
+            <p className="mt-2 max-w-xl text-[13px] leading-relaxed sm:text-sm">
               A private, non-commercial friends-and-family arrangement. Not a
               registered investment adviser, broker-dealer, or public offering.
               Nothing on this site is an offer to the general public or
               personalized investment advice. No fees are charged.
             </p>
           </div>
-          <div className="flex flex-col gap-2 sm:items-end">
+          <div className="flex flex-col gap-3 sm:items-end sm:gap-2">
             <Link
               href={trackRecordHref}
-              className="text-[var(--caf-ink)] underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 items-center text-[var(--caf-ink)] underline-offset-4 hover:underline sm:min-h-0"
             >
               Track record →
             </Link>
@@ -702,7 +683,7 @@ export default async function MarketingPage() {
               href={SUBSTACK_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--caf-ink)] underline-offset-4 hover:underline"
+              className="inline-flex min-h-11 items-center text-[var(--caf-ink)] underline-offset-4 hover:underline sm:min-h-0"
             >
               Writing →
             </a>

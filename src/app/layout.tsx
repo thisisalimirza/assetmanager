@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Manrope, Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -27,6 +27,13 @@ export const metadata: Metadata = {
   description:
     "A private, invite-only Alpha Fund for close friends and family — clear tracking, no fees. Not a licensed advisory.",
   metadataBase: new URL("https://capitalalphafund.com"),
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#071410",
 };
 
 export default function RootLayout({

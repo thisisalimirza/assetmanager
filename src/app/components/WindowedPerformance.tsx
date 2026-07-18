@@ -39,15 +39,15 @@ export function WindowedPerformance({
 
   const isMarketing = variant === "marketing";
   const tabWrap = isMarketing
-    ? "flex flex-wrap gap-1 border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-1"
-    : "flex flex-wrap gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-950";
+    ? "flex w-full gap-1 overflow-x-auto border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:w-auto sm:flex-wrap"
+    : "flex w-full gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden dark:bg-zinc-950 sm:w-auto sm:flex-wrap";
   const tabBtn = (on: boolean) =>
     isMarketing
-      ? "px-3 py-1.5 text-sm font-medium transition-colors " +
+      ? "min-h-10 shrink-0 px-3 py-2 text-sm font-medium transition-colors sm:min-h-0 sm:py-1.5 " +
         (on
           ? "bg-[var(--caf-ink)] text-[var(--caf-paper)]"
           : "text-[var(--caf-mute)] hover:text-[var(--caf-ink)]")
-      : "rounded-md px-3 py-1 text-sm transition-colors " +
+      : "min-h-10 shrink-0 rounded-md px-3 py-2 text-sm transition-colors sm:min-h-0 sm:py-1 " +
         (on
           ? "bg-zinc-200 font-medium text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
           : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100");
@@ -57,17 +57,35 @@ export function WindowedPerformance({
   const shell = !framed
     ? "p-0"
     : isMarketing
-      ? "border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-5 sm:p-8"
-      : "rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900";
+      ? "border border-[var(--caf-mist)] bg-[var(--caf-paper)] p-4 sm:p-8"
+      : "rounded-xl border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900 sm:p-4";
+
+  const dateBits: string[] = [];
+  if (alpha?.available) {
+    dateBits.push(`${formatDate(alpha.anchorDate)} → ${formatDate(alpha.asOf)}`);
+    if (
+      active.requestedStart &&
+      active.requestedStart < alpha.anchorDate &&
+      active.id !== "all"
+    ) {
+      dateBits.push("from first audited mark");
+    }
+    if (alpha.fundMarkDate < alpha.anchorDate) {
+      dateBits.push(`NAV from ${formatDate(alpha.fundMarkDate)}`);
+    }
+    if (alpha.benchmarkAsOfDate < alpha.asOf) {
+      dateBits.push(`${alpha.label} as of ${formatDate(alpha.benchmarkAsOfDate)}`);
+    }
+  }
 
   return (
     <div className={shell}>
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h3
             className={
               isMarketing
-                ? "font-display text-lg font-semibold"
+                ? "font-display text-base font-semibold sm:text-lg"
                 : "text-sm font-medium text-zinc-500"
             }
           >
@@ -76,21 +94,13 @@ export function WindowedPerformance({
           {alpha?.available && (
             <p
               className={
-                isMarketing ? "mt-1 text-sm text-[var(--caf-mute)]" : "mt-0.5 text-xs text-zinc-400"
+                isMarketing
+                  ? "mt-1 text-xs leading-relaxed text-[var(--caf-mute)] sm:text-sm"
+                  : "mt-0.5 text-xs text-zinc-400"
               }
             >
-              {formatDate(alpha.anchorDate)} → {formatDate(alpha.asOf)}
-              {active.requestedStart &&
-              active.requestedStart < alpha.anchorDate &&
-              active.id !== "all"
-                ? " · from first audited mark"
-                : ""}
-              {alpha.fundMarkDate < alpha.anchorDate
-                ? ` · fund NAV carried from ${formatDate(alpha.fundMarkDate)}`
-                : ""}
-              {alpha.benchmarkAsOfDate < alpha.asOf
-                ? ` · ${alpha.label} as of ${formatDate(alpha.benchmarkAsOfDate)}`
-                : ""}
+              <span className="sm:hidden">{dateBits[0]}</span>
+              <span className="hidden sm:inline">{dateBits.join(" · ")}</span>
             </p>
           )}
         </div>
@@ -220,8 +230,8 @@ function Stat({
       <div
         className={
           (marketing
-            ? "mt-1 font-display text-2xl font-semibold tabular-nums sm:text-3xl "
-            : "mt-0.5 text-xl font-semibold tabular-nums ") + color
+            ? "mt-1 font-display text-xl font-semibold tabular-nums sm:text-3xl "
+            : "mt-0.5 text-lg font-semibold tabular-nums sm:text-xl ") + color
         }
       >
         {value}

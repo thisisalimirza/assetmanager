@@ -40,10 +40,10 @@ export function MarketingStats({
         : "text-red-700";
 
   return (
-    <dl className="mt-10 grid grid-cols-1 gap-8 border-t border-[var(--caf-mist)] pt-10 sm:grid-cols-3">
+    <dl className="mt-8 grid grid-cols-1 gap-6 border-t border-[var(--caf-mist)] pt-8 sm:mt-10 sm:grid-cols-3 sm:gap-8 sm:pt-10">
       <div className="caf-stat-tile rounded-sm p-1">
         <dt className="text-sm text-[var(--caf-mute)]">{returnLabel}</dt>
-        <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
+        <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl">
           {returnValue != null ? (
             <CountUp value={returnValue} format={fmtPct} />
           ) : (
@@ -54,7 +54,7 @@ export function MarketingStats({
       </div>
       <div className="caf-stat-tile rounded-sm p-1">
         <dt className="text-sm text-[var(--caf-mute)]">Alpha Fund value</dt>
-        <dd className="mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight">
+        <dd className="mt-2 font-display text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl">
           <CountUp value={aum} format={fmtMoney} durationMs={1300} />
         </dd>
         <dd className="mt-2 text-sm leading-relaxed text-[var(--caf-mute)]">{aumHint}</dd>
@@ -63,7 +63,8 @@ export function MarketingStats({
         <dt className="text-sm text-[var(--caf-mute)]">{thirdLabel}</dt>
         <dd
           className={
-            "mt-2 font-display text-5xl font-semibold tabular-nums tracking-tight " + thirdTone
+            "mt-2 font-display text-4xl font-semibold tabular-nums tracking-tight sm:text-5xl " +
+            thirdTone
           }
         >
           {thirdIsCurrencyGoal ? (
